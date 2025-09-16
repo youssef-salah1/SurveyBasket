@@ -1,4 +1,8 @@
-﻿namespace SurveyBasket.Api.Contracts.EntitiesConfiguration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using SurveyBasket.Api.Entities;
+
+namespace SurveyBasket.Api.Persistence.EntitiesConfiguration;
 
 public class PollConfiguration : IEntityTypeConfiguration<Poll>
 {

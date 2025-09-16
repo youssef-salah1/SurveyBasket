@@ -1,4 +1,6 @@
-﻿using SurveyBasket.Api.Persistence;
+﻿using Microsoft.EntityFrameworkCore;
+using SurveyBasket.Api.Entities;
+using SurveyBasket.Api.Persistence;
 
 namespace SurveyBasket.Api.Services;
 
@@ -43,7 +45,7 @@ public class PollService(ApplicationDbContext context) : IPollService
         return true;
     }
 
-    public async Task<bool> TogglePublishStatusAsync([FromRoute] int id, CancellationToken cancellationToken = default)
+    public async Task<bool> TogglePublishStatusAsync(int id, CancellationToken cancellationToken = default)
     {
         var poll = await GetAsync(id, cancellationToken);
         if (poll is null)

@@ -1,4 +1,7 @@
-﻿namespace SurveyBasket.Api.Controllers;
+﻿using Microsoft.AspNetCore.Authorization;
+using SurveyBasket.Api.Contracts.Polls;
+
+namespace SurveyBasket.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -7,11 +10,12 @@ public class PollsController(IMapper mapper, IPollService pollService) : Control
     private readonly IMapper _mapper = mapper;
     private readonly IPollService _pollService = pollService;
 
+    [Authorize]
     [HttpGet("")]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var polls = await _pollService.GetAllAsync(cancellationToken);
-        return Ok(polls.Adapt<IEnumerable<PollResponse>>());
+        return Ok(polls.Adapt<IEnumerable<AuthResponse>>());
     }
 
     [HttpGet("{id}")]
@@ -20,18 +24,18 @@ public class PollsController(IMapper mapper, IPollService pollService) : Control
         var poll = await _pollService.GetAsync(id, cancellationToken);
         if (poll is null)
             return NotFound();
-        return Ok(poll.Adapt<PollResponse>());
+        return Ok(poll.Adapt<AuthResponse>());
     }
     [HttpPost("")]
-    public async Task<IActionResult> Add([FromBody] PollRequest pollRequest,
+    public async Task<IActionResult> Add([FromBody] AuthRequest pollRequest,
         CancellationToken cancellationToken)
     {
         var poll = _mapper.Map<Poll>(pollRequest);
         var createdPoll = await _pollService.AddAsync(poll, cancellationToken);
-        return CreatedAtAction(nameof(Get), new { id = createdPoll.Id }, createdPoll.Adapt<PollResponse>());
+        return CreatedAtAction(nameof(Get), new { id = createdPoll.Id }, createdPoll.Adapt<AuthResponse>());
     }
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update([FromRoute] int id, [FromBody] PollRequest pollRequest,
+    public async Task<IActionResult> Update([FromRoute] int id, [FromBody] AuthRequest pollRequest,
         CancellationToken cancellationToken)
     {
         var isUpdated = await _pollService.UpdateAsync(id, pollRequest.Adapt<Poll>(), cancellationToken);

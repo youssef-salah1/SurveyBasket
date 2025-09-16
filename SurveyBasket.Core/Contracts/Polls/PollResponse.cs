@@ -1,4 +1,4 @@
-﻿namespace SurveyBasket.Api.Contracts.Responses;
+﻿namespace SurveyBasket.Api.Contracts.Polls;
 
-public record PollResponse
+public record AuthResponse
     (int Id, string Title, string Summary, bool IsPublished, DateOnly StartsAt, DateOnly EndsAt);
