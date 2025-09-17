@@ -15,5 +15,4 @@ public class AuthController(IAuthService authService) : ControllerBase
 
         return authResponse is null ? BadRequest("Invalid User") : Ok(authResponse);
     }
-
 }

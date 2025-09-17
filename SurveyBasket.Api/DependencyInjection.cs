@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using SurveyBasket.Api.Authentication;
 using SurveyBasket.Api.Persistence;
+using SurveyBasket.Core.Authentication;
 using System.Reflection;
 using System.Text;
 
@@ -15,7 +16,7 @@ public static class DependencyInjection
     {
         services.AddControllers();
 
-        services.AddAuth();
+        services.AddAuth(configuration);
 
         services.AddDatabase(configuration);
 
@@ -53,7 +54,6 @@ public static class DependencyInjection
     }
     private static IServiceCollection AddFluentValidation(this IServiceCollection services)
     {
-
         services
            .AddFluentValidationAutoValidation()
            .AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
@@ -69,9 +69,15 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection AddAuth(this IServiceCollection services)
+    private static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IJwtProvider, JwtProvider>();
+
+        //services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
+        services.AddOptions<JwtOptions>()
+            .BindConfiguration("Jwt")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         services.AddIdentity<ApplicationUser, IdentityRole>()
         .AddEntityFrameworkStores<ApplicationDbContext>();

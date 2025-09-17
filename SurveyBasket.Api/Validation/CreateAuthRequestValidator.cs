@@ -1,5 +1,4 @@
-﻿using FluentValidation;
-using SurveyBasket.Api.Contracts.Authentication;
+﻿using SurveyBasket.Api.Contracts.Authentication;
 
 namespace SurveyBasket.Repository.Validation;
 
