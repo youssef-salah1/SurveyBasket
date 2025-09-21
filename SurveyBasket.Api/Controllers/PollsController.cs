@@ -5,12 +5,13 @@ namespace SurveyBasket.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
+
 public class PollsController(IMapper mapper, IPollService pollService) : ControllerBase
 {
     private readonly IMapper _mapper = mapper;
     private readonly IPollService _pollService = pollService;
 
-    [Authorize]
     [HttpGet("")]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
@@ -26,6 +27,7 @@ public class PollsController(IMapper mapper, IPollService pollService) : Control
             return NotFound();
         return Ok(poll.Adapt<AuthResponse>());
     }
+
     [HttpPost("")]
     public async Task<IActionResult> Add([FromBody] AuthRequest pollRequest,
         CancellationToken cancellationToken)
@@ -34,6 +36,7 @@ public class PollsController(IMapper mapper, IPollService pollService) : Control
         var createdPoll = await _pollService.AddAsync(poll, cancellationToken);
         return CreatedAtAction(nameof(Get), new { id = createdPoll.Id }, createdPoll.Adapt<AuthResponse>());
     }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> Update([FromRoute] int id, [FromBody] AuthRequest pollRequest,
         CancellationToken cancellationToken)
@@ -41,12 +44,14 @@ public class PollsController(IMapper mapper, IPollService pollService) : Control
         var isUpdated = await _pollService.UpdateAsync(id, pollRequest.Adapt<Poll>(), cancellationToken);
         return isUpdated ? NoContent() : NotFound();
     }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
     {
         var isDeleted = await _pollService.DeleteAsync(id, cancellationToken);
         return isDeleted ? NoContent() : NotFound();
     }
+
     [HttpPut("{id}/togglePublish")]
     public async Task<IActionResult> TogglePublishStatusAsync([FromRoute] int id, CancellationToken cancellationToken)
     {
