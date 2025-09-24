@@ -1,5 +1,4 @@
-﻿
-using SurveyBasket.Core.Contracts.Polls;
+﻿using SurveyBasket.Core.Contracts.Polls;
 
 namespace SurveyBasket.Api.Controllers;
 
@@ -14,47 +13,59 @@ public class PollsController(IMapper mapper, IPollService pollService) : Control
     [HttpGet("")]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var polls = await _pollService.GetAllAsync(cancellationToken);
-        return Ok(polls.Adapt<IEnumerable<AuthResponse>>());
+        var result = await _pollService.GetAllAsync(cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> Get([FromRoute] int id, CancellationToken cancellationToken)
     {
-        var poll = await _pollService.GetAsync(id, cancellationToken);
-        if (poll is null)
-            return NotFound();
-        return Ok(poll.Adapt<AuthResponse>());
+        var result = await _pollService.GetAsync(id, cancellationToken);
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.Code,
+                detail: result.Error.Message);
     }
 
     [HttpPost("")]
-    public async Task<IActionResult> Add([FromBody] AuthRequest pollRequest,
+    public async Task<IActionResult> Add([FromBody] PollRequest pollRequest,
         CancellationToken cancellationToken)
     {
-        var poll = _mapper.Map<Poll>(pollRequest);
-        var createdPoll = await _pollService.AddAsync(poll, cancellationToken);
-        return CreatedAtAction(nameof(Get), new { id = createdPoll.Id }, createdPoll.Adapt<AuthResponse>());
+        var result = await _pollService.AddAsync(pollRequest, cancellationToken);
+        return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update([FromRoute] int id, [FromBody] AuthRequest pollRequest,
+    public async Task<IActionResult> Update([FromRoute] int id, [FromBody] PollRequest pollRequest,
         CancellationToken cancellationToken)
     {
-        var isUpdated = await _pollService.UpdateAsync(id, pollRequest.Adapt<Poll>(), cancellationToken);
-        return isUpdated ? NoContent() : NotFound();
+        var result = await _pollService.UpdateAsync(id, pollRequest, cancellationToken);
+
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.Code,
+                detail: result.Error.Message);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
     {
-        var isDeleted = await _pollService.DeleteAsync(id, cancellationToken);
-        return isDeleted ? NoContent() : NotFound();
+        var result = await _pollService.DeleteAsync(id, cancellationToken);
+
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.Code,
+                detail: result.Error.Message);
     }
 
     [HttpPut("{id}/togglePublish")]
     public async Task<IActionResult> TogglePublishStatusAsync([FromRoute] int id, CancellationToken cancellationToken)
     {
-        var isToggled = await _pollService.TogglePublishStatusAsync(id, cancellationToken);
-        return isToggled ? NoContent() : NotFound();
+        var result = await _pollService.TogglePublishStatusAsync(id, cancellationToken);
+
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.Code,
+                detail: result.Error.Message);
     }
 }

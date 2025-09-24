@@ -1,15 +1,16 @@
-﻿using SurveyBasket.Core.Contracts.Authentication;
+﻿using SurveyBasket.Core.Abstractions;
+using SurveyBasket.Core.Contracts.Authentication;
 
 namespace SurveyBasket.Core.Service;
 
 public interface IAuthService
 {
-    public Task<AuthResponse?> GetTokenAsync(string email, string password,
+    public Task<Result<AuthResponse>> GetTokenAsync(string email, string password,
         CancellationToken cancellationToken = default!);
 
-    public Task<AuthResponse?> GetRefreshTokenAsync(string token, string refreshToken,
+    public Task<Result<AuthResponse>> GetRefreshTokenAsync(string token, string refreshToken,
         CancellationToken cancellationToken = default!);
 
-    public Task<bool> RevokeRefreshTokenAsync(string token, string refreshToken,
+    public Task<Result> RevokeRefreshTokenAsync(string token, string refreshToken,
         CancellationToken cancellationToken = default!);
 }

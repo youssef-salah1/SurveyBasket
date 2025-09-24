@@ -2,7 +2,7 @@
 
 namespace SurveyBasket.Api.Validation;
 
-public class CreatePollRequestValidator : AbstractValidator<AuthRequest>
+public class CreatePollRequestValidator : AbstractValidator<PollRequest>
 {
     public CreatePollRequestValidator()
     {
