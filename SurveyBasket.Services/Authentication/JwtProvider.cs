@@ -1,12 +1,11 @@
-﻿using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using SurveyBasket.Api.Entities;
-using SurveyBasket.Core.Authentication;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using SurveyBasket.Core.Authentication;
 
-namespace SurveyBasket.Api.Authentication;
+namespace SurveyBasket.Services.Authentication;
 
 public class JwtProvider(IOptions<JwtOptions> options) : IJwtProvider
 {
@@ -16,11 +15,11 @@ public class JwtProvider(IOptions<JwtOptions> options) : IJwtProvider
     {
         Claim[] calims =
         [
-            new Claim(JwtRegisteredClaimNames.Sub, applicationUser.Id),
-            new Claim(JwtRegisteredClaimNames.Email, applicationUser.Email!),
-            new Claim(JwtRegisteredClaimNames.GivenName , applicationUser.FirstName),
-            new Claim(JwtRegisteredClaimNames.FamilyName , applicationUser.LastName),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new(JwtRegisteredClaimNames.Sub, applicationUser.Id),
+            new(JwtRegisteredClaimNames.Email, applicationUser.Email!),
+            new(JwtRegisteredClaimNames.GivenName, applicationUser.FirstName),
+            new(JwtRegisteredClaimNames.FamilyName, applicationUser.LastName),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         ];
 
         var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Key));
@@ -28,9 +27,9 @@ public class JwtProvider(IOptions<JwtOptions> options) : IJwtProvider
         var signingCredentials = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            issuer: _options.Issuer,
-            audience: _options.Audience,
-            claims: calims,
+            _options.Issuer,
+            _options.Audience,
+            calims,
             expires: DateTime.UtcNow.AddMinutes(_options.ExpiryMinutes),
             signingCredentials: signingCredentials
         );
@@ -46,14 +45,14 @@ public class JwtProvider(IOptions<JwtOptions> options) : IJwtProvider
         try
         {
             tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                IssuerSigningKey = summetricSecurityKey,
-                ValidateIssuerSigningKey = true,
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ClockSkew = TimeSpan.Zero
-            },
-            out SecurityToken validatedToken
+                {
+                    IssuerSigningKey = summetricSecurityKey,
+                    ValidateIssuerSigningKey = true,
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                },
+                out var validatedToken
             );
             var jwtToken = (JwtSecurityToken)validatedToken;
             return jwtToken.Claims.First(x => x.Type == JwtRegisteredClaimNames.Sub).Value;
@@ -62,6 +61,5 @@ public class JwtProvider(IOptions<JwtOptions> options) : IJwtProvider
         {
             return null;
         }
-
     }
 }

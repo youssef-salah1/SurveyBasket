@@ -1,4 +1,11 @@
-﻿namespace SurveyBasket.Api.Contracts.Authentication;
+﻿namespace SurveyBasket.Core.Contracts.Authentication;
 
-public record AuthResponse
-    (string Id, string? Email, string FirstName, string LastName, string Token, int Expiresin, string RefreshToken, DateTime RefreshTokenExpiration);
+public record AuthResponse(
+    string Id,
+    string? Email,
+    string FirstName,
+    string LastName,
+    string Token,
+    int Expiresin,
+    string RefreshToken,
+    DateTime RefreshTokenExpiration);

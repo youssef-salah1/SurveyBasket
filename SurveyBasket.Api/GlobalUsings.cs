@@ -4,5 +4,6 @@ global using Mapster;
 global using MapsterMapper;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.EntityFrameworkCore;
-global using SurveyBasket.Api.Entities;
-global using SurveyBasket.Api.Services;
+global using SurveyBasket.Core.Entities;
+global using SurveyBasket.Core.Service;
+global using Microsoft.AspNetCore.Authorization;

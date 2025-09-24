@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Reflection;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
-using SurveyBasket.Api.Authentication;
-using SurveyBasket.Api.Persistence;
 using SurveyBasket.Core.Authentication;
-using System.Reflection;
-using System.Text;
+using SurveyBasket.Core.Service;
+using SurveyBasket.Repository.Persistence;
+using SurveyBasket.Services.Authentication;
+using SurveyBasket.Services.Services;
 
 namespace SurveyBasket.Api;
 
@@ -19,10 +21,10 @@ public static class DependencyInjection
         services.AddCors(options =>
             options.AddDefaultPolicy(builder =>
                 builder
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>()!)
-        ));
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>()!)
+            ));
 
         services.AddAuth(configuration);
 
@@ -43,7 +45,7 @@ public static class DependencyInjection
     private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection") ??
-            throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+                               throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
@@ -53,24 +55,24 @@ public static class DependencyInjection
 
     private static IServiceCollection AddSwagger(this IServiceCollection services)
     {
-
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
 
         return services;
     }
+
     private static IServiceCollection AddFluentValidation(this IServiceCollection services)
     {
         services
-           .AddFluentValidationAutoValidation()
-           .AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+            .AddFluentValidationAutoValidation()
+            .AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
         return services;
     }
+
     private static IServiceCollection AddMapster(this IServiceCollection services)
     {
-
         var mappingConfiguration = TypeAdapterConfig.GlobalSettings;
         mappingConfiguration.Scan(Assembly.GetExecutingAssembly());
         services.AddSingleton<IMapper>(new Mapper(mappingConfiguration));
@@ -88,29 +90,29 @@ public static class DependencyInjection
             .ValidateOnStart();
 
         services.AddIdentity<ApplicationUser, IdentityRole>()
-        .AddEntityFrameworkStores<ApplicationDbContext>();
+            .AddEntityFrameworkStores<ApplicationDbContext>();
 
         services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-           .AddJwtBearer(options =>
-           {
-               options.SaveToken = true;
-               options.TokenValidationParameters = new TokenValidationParameters
-               {
-                   ValidateIssuer = true,
-                   ValidateAudience = true,
-                   ValidateLifetime = true,
-                   ValidateIssuerSigningKey = true,
-                   ValidIssuer = "SurveyBasket",
-                   ValidAudience = "SurveyBasketClient",
-                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("LBaxSXNdx7SSWCqzE8EJFFHAtSpd5KrU")),
-                   ClockSkew = TimeSpan.Zero
-
-               };
-           });
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.SaveToken = true;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = "SurveyBasket",
+                    ValidAudience = "SurveyBasketClient",
+                    IssuerSigningKey =
+                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes("LBaxSXNdx7SSWCqzE8EJFFHAtSpd5KrU")),
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
         return services;
     }
 }

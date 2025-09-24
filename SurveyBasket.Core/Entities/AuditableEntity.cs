@@ -1,6 +1,4 @@
-﻿using SurveyBasket.Api.Entities;
-
-namespace SurveyBasket.Core.Entities;
+﻿namespace SurveyBasket.Core.Entities;
 
 public class AuditableEntity
 {

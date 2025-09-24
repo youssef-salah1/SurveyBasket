@@ -1,6 +1,6 @@
-﻿using SurveyBasket.Api.Contracts.Polls;
+﻿using SurveyBasket.Core.Contracts.Polls;
 
-namespace SurveyBasket.Repository.Validation;
+namespace SurveyBasket.Api.Validation;
 
 public class CreatePollRequestValidator : AbstractValidator<AuthRequest>
 {

@@ -1,6 +1,6 @@
-﻿using SurveyBasket.Api.Contracts.Authentication;
+﻿using SurveyBasket.Core.Contracts.Authentication;
 
-namespace SurveyBasket.Repository.Validation;
+namespace SurveyBasket.Api.Validation;
 
 public class CreateAuthRequestValidator : AbstractValidator<LoginRequest>
 {

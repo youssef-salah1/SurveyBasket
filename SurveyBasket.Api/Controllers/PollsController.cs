@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using SurveyBasket.Api.Contracts.Polls;
+﻿
+using SurveyBasket.Core.Contracts.Polls;
 
 namespace SurveyBasket.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
 [Authorize]
-
 public class PollsController(IMapper mapper, IPollService pollService) : ControllerBase
 {
     private readonly IMapper _mapper = mapper;
@@ -55,7 +54,7 @@ public class PollsController(IMapper mapper, IPollService pollService) : Control
     [HttpPut("{id}/togglePublish")]
     public async Task<IActionResult> TogglePublishStatusAsync([FromRoute] int id, CancellationToken cancellationToken)
     {
-        bool isToggled = await _pollService.TogglePublishStatusAsync(id, cancellationToken);
+        var isToggled = await _pollService.TogglePublishStatusAsync(id, cancellationToken);
         return isToggled ? NoContent() : NotFound();
     }
 }

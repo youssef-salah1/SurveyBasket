@@ -1,8 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SurveyBasket.Api.Entities;
-using SurveyBasket.Api.Persistence;
-
-namespace SurveyBasket.Api.Services;
+﻿
+namespace SurveyBasket.Services.Services;
 
 public class PollService(ApplicationDbContext context) : IPollService
 {
@@ -16,10 +13,14 @@ public class PollService(ApplicationDbContext context) : IPollService
     }
 
     public async Task<IEnumerable<Poll>> GetAllAsync(CancellationToken cancellationToken)
-        => await _context.Polls.AsNoTracking().ToListAsync(cancellationToken);
+    {
+        return await _context.Polls.AsNoTracking().ToListAsync(cancellationToken);
+    }
 
     public async Task<Poll?> GetAsync(int id, CancellationToken cancellationToken)
-        => await _context.Polls.FindAsync(id, cancellationToken);
+    {
+        return await _context.Polls.FindAsync(id, cancellationToken);
+    }
 
     public async Task<bool> UpdateAsync(int id, Poll poll, CancellationToken cancellationToken = default)
     {

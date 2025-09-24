@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace SurveyBasket.Api.Persistence.Migrations
+namespace SurveyBasket.Repository.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class AddRefreshToken : Migration

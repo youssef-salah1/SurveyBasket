@@ -1,4 +1,3 @@
-﻿namespace SurveyBasket.Api.Contracts.Polls;
+﻿namespace SurveyBasket.Core.Contracts.Polls;
 
-public record AuthRequest
-    (string Title, string Summary, DateOnly StartsAt, DateOnly EndsAt);
+public record AuthRequest(string Title, string Summary, DateOnly StartsAt, DateOnly EndsAt);
