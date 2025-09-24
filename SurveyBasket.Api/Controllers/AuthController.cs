@@ -42,6 +42,5 @@ public class AuthController(IAuthService authService) : ControllerBase
         return isRevoked.IsSuccess
             ? Ok()
             : isRevoked.ToProblem(StatusCodes.Status400BadRequest);
-        ;
     }
 }
