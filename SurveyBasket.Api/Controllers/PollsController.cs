@@ -1,13 +1,13 @@
-﻿using SurveyBasket.Core.Contracts.Polls;
+﻿using SurveyBasket.Core.Abstractions;
+using SurveyBasket.Core.Contracts.Polls;
 
 namespace SurveyBasket.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
 [Authorize]
-public class PollsController(IMapper mapper, IPollService pollService) : ControllerBase
+public class PollsController(IPollService pollService) : ControllerBase
 {
-    private readonly IMapper _mapper = mapper;
     private readonly IPollService _pollService = pollService;
 
     [HttpGet("")]
@@ -23,8 +23,7 @@ public class PollsController(IMapper mapper, IPollService pollService) : Control
         var result = await _pollService.GetAsync(id, cancellationToken);
         return result.IsSuccess
             ? Ok(result.Value)
-            : Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.Code,
-                detail: result.Error.Message);
+            : result.ToProblem(StatusCodes.Status404NotFound);
     }
 
     [HttpPost("")]
@@ -43,8 +42,7 @@ public class PollsController(IMapper mapper, IPollService pollService) : Control
 
         return result.IsSuccess
             ? NoContent()
-            : Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.Code,
-                detail: result.Error.Message);
+            : result.ToProblem(StatusCodes.Status404NotFound);
     }
 
     [HttpDelete("{id}")]
@@ -54,8 +52,7 @@ public class PollsController(IMapper mapper, IPollService pollService) : Control
 
         return result.IsSuccess
             ? NoContent()
-            : Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.Code,
-                detail: result.Error.Message);
+            : result.ToProblem(StatusCodes.Status404NotFound);
     }
 
     [HttpPut("{id}/togglePublish")]
@@ -65,7 +62,6 @@ public class PollsController(IMapper mapper, IPollService pollService) : Control
 
         return result.IsSuccess
             ? NoContent()
-            : Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.Code,
-                detail: result.Error.Message);
+            : result.ToProblem(StatusCodes.Status404NotFound);
     }
 }

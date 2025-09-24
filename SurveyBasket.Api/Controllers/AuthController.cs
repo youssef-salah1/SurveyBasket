@@ -1,4 +1,5 @@
-﻿using SurveyBasket.Core.Contracts.Authentication;
+﻿using SurveyBasket.Core.Abstractions;
+using SurveyBasket.Core.Contracts.Authentication;
 
 namespace SurveyBasket.Api.Controllers;
 
@@ -16,8 +17,7 @@ public class AuthController(IAuthService authService) : ControllerBase
 
         return authResponse.IsSuccess
             ? Ok(authResponse.Value)
-            : Problem(statusCode: StatusCodes.Status400BadRequest, title: authResponse.Error.Code,
-                detail: authResponse.Error.Message);
+            : authResponse.ToProblem(StatusCodes.Status400BadRequest);
     }
 
     [HttpPost("refresh")]
@@ -29,8 +29,7 @@ public class AuthController(IAuthService authService) : ControllerBase
 
         return authResponse.IsSuccess
             ? Ok(authResponse.Value)
-            : Problem(statusCode: StatusCodes.Status400BadRequest, title: authResponse.Error.Code,
-                detail: authResponse.Error.Message);
+            : authResponse.ToProblem(StatusCodes.Status400BadRequest);
     }
 
     [HttpPost("revoke-refresh-token")]
@@ -42,8 +41,7 @@ public class AuthController(IAuthService authService) : ControllerBase
 
         return isRevoked.IsSuccess
             ? Ok()
-            : Problem(statusCode: StatusCodes.Status400BadRequest, title: isRevoked.Error.Code,
-                detail: isRevoked.Error.Message);
+            : isRevoked.ToProblem(StatusCodes.Status400BadRequest);
         ;
     }
 }
