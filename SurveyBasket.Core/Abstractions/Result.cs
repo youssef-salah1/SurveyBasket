@@ -2,7 +2,7 @@
 
 public class Result
 {
-    public Result(bool isSuccess, Error error)
+    protected Result(bool isSuccess, Error error)
     {
         if (isSuccess && error != Error.None)
             throw new InvalidOperationException("A result cannot be successful and contain an error.");

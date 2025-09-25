@@ -1,5 +1,6 @@
 ﻿using SurveyBasket.Core.Abstractions;
 using SurveyBasket.Core.Contracts.Polls;
+using SurveyBasket.Core.Errors;
 
 namespace SurveyBasket.Api.Controllers;
 
@@ -31,7 +32,10 @@ public class PollsController(IPollService pollService) : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _pollService.AddAsync(pollRequest, cancellationToken);
-        return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : result.ToProblem(StatusCodes.Status409Conflict);
     }
 
     [HttpPut("{id}")]
@@ -42,7 +46,9 @@ public class PollsController(IPollService pollService) : ControllerBase
 
         return result.IsSuccess
             ? NoContent()
-            : result.ToProblem(StatusCodes.Status404NotFound);
+            : result.ToProblem(result.Error.Code == PollErrors.PollTitleAlreadyExists.Code
+                ? StatusCodes.Status409Conflict
+                : StatusCodes.Status404NotFound);
     }
 
     [HttpDelete("{id}")]

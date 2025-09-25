@@ -1,7 +1,6 @@
 ﻿using Mapster;
 using SurveyBasket.Core.Abstractions;
 using SurveyBasket.Core.Contracts.Polls;
-using SurveyBasket.Core.Errors;
 
 namespace SurveyBasket.Services.Services;
 
@@ -23,20 +22,31 @@ public class PollService(ApplicationDbContext context) : IPollService
             : Result.Success(poll.Adapt<PollResponse>());
     }
 
-    public async Task<PollResponse> AddAsync(PollRequest poll, CancellationToken cancellationToken)
+    public async Task<Result<PollResponse>> AddAsync(PollRequest poll, CancellationToken cancellationToken)
     {
+        var isFound = await _context.Polls.AnyAsync(p => p.Title == poll.Title, cancellationToken);
+
+        if (isFound)
+            return Result.Failure<PollResponse>(PollErrors.PollTitleAlreadyExists);
+
         var newPoll = await _context.AddAsync(poll.Adapt<Poll>(), cancellationToken);
+
         await _context.SaveChangesAsync(cancellationToken);
 
-        return newPoll.Entity.Adapt<PollResponse>();
+        return newPoll.Entity.Adapt<Result<PollResponse>>();
     }
 
     public async Task<Result> UpdateAsync(int id, PollRequest poll, CancellationToken cancellationToken = default)
     {
         var updatedPoll = await _context.Polls.FindAsync(id, cancellationToken);
 
-        if (updatedPoll is null || updatedPoll.Id != id)
+        if (updatedPoll is null)
             return Result.Failure(PollErrors.PollNotFound);
+
+        var isFound = await _context.Polls.AnyAsync(p => p.Title == poll.Title && p.Id != id, cancellationToken);
+
+        if (isFound)
+            return Result.Failure<PollResponse>(PollErrors.PollTitleAlreadyExists);
 
         updatedPoll.Title = poll.Title;
         updatedPoll.Summary = poll.Summary;
