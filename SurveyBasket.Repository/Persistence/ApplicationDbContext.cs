@@ -14,11 +14,23 @@ public class ApplicationDbContext(
 {
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
+    public DbSet<Answer> Answers { get; set; }
     public DbSet<Poll> Polls { get; set; }
+    public DbSet<Question> Questions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+        var cascadFks = modelBuilder.Model
+            .GetEntityTypes()
+            .SelectMany(e => e.GetForeignKeys())
+            .Where(fk => !fk.IsOwnership && fk.DeleteBehavior == DeleteBehavior.Cascade);
+
+        foreach (var fk in cascadFks)
+            fk.DeleteBehavior = DeleteBehavior.Restrict;
+
+        modelBuilder.Entity<Answer>().HasQueryFilter(a => a.IsActive);
 
         base.OnModelCreating(modelBuilder);
     }

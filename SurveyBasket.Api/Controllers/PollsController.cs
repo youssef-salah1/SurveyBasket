@@ -46,7 +46,7 @@ public class PollsController(IPollService pollService) : ControllerBase
 
         return result.IsSuccess
             ? NoContent()
-            : result.ToProblem(result.Error.Code == PollErrors.PollTitleAlreadyExists.Code
+            : result.ToProblem(result.Error.Code.Equals(PollErrors.PollTitleAlreadyExists.Code)
                 ? StatusCodes.Status409Conflict
                 : StatusCodes.Status404NotFound);
     }

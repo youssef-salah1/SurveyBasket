@@ -1,0 +1,15 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using SurveyBasket.Core.Entities;
+
+namespace SurveyBasket.Repository.Persistence.EntitiesConfiguration;
+
+internal class AnswerConfiguration : IEntityTypeConfiguration<Answer>
+{
+    public void Configure(EntityTypeBuilder<Answer> builder)
+    {
+        builder.HasIndex(x => new { x.QuestionId, x.Content }).IsUnique();
+
+        builder.Property(a => a.Content).HasMaxLength(1000);
+    }
+}
