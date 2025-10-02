@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using SurveyBasket.Core.Entities;
-
-namespace SurveyBasket.Repository.Persistence.EntitiesConfiguration;
+﻿namespace SurveyBasket.Repository.Persistence.EntitiesConfiguration;
 
 public class QuestionConfiguration : IEntityTypeConfiguration<Question>
 {

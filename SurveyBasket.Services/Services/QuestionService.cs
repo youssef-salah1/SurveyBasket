@@ -46,6 +46,36 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
             : Result.Success(question);
     }
 
+    public async Task<Result<IEnumerable<QuestionResponse>>> GetAvailableAsync(int pollId, string userId,
+        CancellationToken cancellationToken)
+    {
+        var hasVoted = await _context.Votes.AnyAsync(v => v.PollId == pollId && v.UserId == userId, cancellationToken);
+
+        if (hasVoted)
+            return Result.Failure<IEnumerable<QuestionResponse>>(PollErrors.UserAlreadyVoted);
+
+        var isValid = await _context.Polls.AnyAsync(v =>
+            v.Id == pollId && v.IsPublished && v.StartsAt <= DateOnly.FromDateTime(DateTime.UtcNow)
+            && v.EndsAt >= DateOnly.FromDateTime(DateTime.UtcNow));
+
+        if (!isValid)
+            return Result.Failure<IEnumerable<QuestionResponse>>(PollErrors.PollNotFound);
+
+        var questions = await _context.Questions
+            .Where(v => v.PollId == pollId && v.IsActive)
+            .Include(v => v.Answers)
+            .Select(v => new QuestionResponse(
+                v.Id,
+                v.Content,
+                v.Answers.Where(x => x.IsActive).Select(x => new AnswerResponse(x.Id, x.Content)
+                ))
+            )
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return Result.Success<IEnumerable<QuestionResponse>>(questions);
+    }
+
     public async Task<Result<QuestionResponse>> Add(int pollId, QuestionRequest questionRequest,
         CancellationToken cancellationToken = default)
     {

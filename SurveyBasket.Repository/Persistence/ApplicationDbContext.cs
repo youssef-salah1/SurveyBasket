@@ -2,8 +2,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using SurveyBasket.Core.Entities;
 
 namespace SurveyBasket.Repository.Persistence;
 
@@ -14,9 +12,11 @@ public class ApplicationDbContext(
 {
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
-    public DbSet<Answer> Answers { get; set; }
     public DbSet<Poll> Polls { get; set; }
+    public DbSet<Vote> Votes { get; set; }
+    public DbSet<Answer> Answers { get; set; }
     public DbSet<Question> Questions { get; set; }
+    public DbSet<VoteAnswer> VoteAnswers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,7 +30,7 @@ public class ApplicationDbContext(
         foreach (var fk in cascadFks)
             fk.DeleteBehavior = DeleteBehavior.Restrict;
 
-        modelBuilder.Entity<Answer>().HasQueryFilter(a => a.IsActive);
+        //modelBuilder.Entity<Answer>().HasQueryFilter(a => a.IsActive);
 
         base.OnModelCreating(modelBuilder);
     }

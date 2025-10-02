@@ -5,12 +5,12 @@ namespace SurveyBasket.Core.Abstractions;
 
 public static class ResultExtensions
 {
-    public static ObjectResult ToProblem(this Result result, int statusCode)
+    public static ObjectResult ToProblem(this Result result)
     {
         if (result.IsSuccess)
             throw new InvalidOperationException("Cannot to covert success result to problem!");
 
-        var problem = Results.Problem(statusCode: statusCode);
+        var problem = Results.Problem(statusCode: result.Error.StatusCode);
 
         var problemDetails = problem.GetType().GetProperty(nameof(ProblemDetails))!.GetValue(problem) as ProblemDetails;
 
@@ -19,7 +19,8 @@ public static class ResultExtensions
             {
                 "errors", new[]
                 {
-                    result.Error
+                    result.Error.Code,
+                    result.Error.Message
                 }
             }
         };

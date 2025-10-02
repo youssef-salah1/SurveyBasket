@@ -1,13 +1,12 @@
 ﻿using SurveyBasket.Core.Abstractions;
 using SurveyBasket.Core.Contracts.Question;
-using SurveyBasket.Core.Errors;
 
 namespace SurveyBasket.Api.Controllers;
 
 [Route("api/polls/{pollId}/[controller]")]
 [ApiController]
 [Authorize]
-public class QuestionController(IQuestionService questionService) : ControllerBase
+public class QuestionsController(IQuestionService questionService) : ControllerBase
 {
     private readonly IQuestionService _questionService = questionService;
 
@@ -18,7 +17,7 @@ public class QuestionController(IQuestionService questionService) : ControllerBa
 
         return result.IsSuccess
             ? Ok(result.Value)
-            : result.ToProblem(StatusCodes.Status404NotFound);
+            : result.ToProblem();
     }
 
     [HttpGet("{id}")]
@@ -29,8 +28,9 @@ public class QuestionController(IQuestionService questionService) : ControllerBa
 
         return result.IsSuccess
             ? Ok(result.Value)
-            : result.ToProblem(StatusCodes.Status404NotFound);
+            : result.ToProblem();
     }
+
 
     [HttpPost("")]
     public async Task<IActionResult> Add([FromRoute] int pollId, [FromBody] QuestionRequest questionRequest,
@@ -40,10 +40,7 @@ public class QuestionController(IQuestionService questionService) : ControllerBa
 
         return result.IsSuccess
             ? CreatedAtAction(nameof(Get), new { pollId, id = result.Value.Id }, result.Value)
-            : result.ToProblem(result.Error.Equals(QuestionErrors.QuestionDuplicated)
-                ? StatusCodes.Status409Conflict
-                : StatusCodes.Status404NotFound
-            );
+            : result.ToProblem();
     }
 
     [HttpPut("{id}")]
@@ -54,10 +51,7 @@ public class QuestionController(IQuestionService questionService) : ControllerBa
 
         return result.IsSuccess
             ? NoContent()
-            : result.ToProblem(result.Error.Equals(QuestionErrors.QuestionDuplicated)
-                ? StatusCodes.Status409Conflict
-                : StatusCodes.Status404NotFound
-            );
+            : result.ToProblem();
     }
 
     [HttpPut("{id}/toggleStatus")]
@@ -66,6 +60,6 @@ public class QuestionController(IQuestionService questionService) : ControllerBa
     {
         var result = await _questionService.ToggleStatusAsync(pollId, id, cancellationToken);
 
-        return result.IsSuccess ? NoContent() : result.ToProblem(StatusCodes.Status404NotFound);
+        return result.IsSuccess ? NoContent() : result.ToProblem();
     }
 }

@@ -11,6 +11,9 @@ public interface IQuestionService
     public Task<Result<QuestionResponse>> GetAsync(int pollId, int questionId,
         CancellationToken cancellationToken = default);
 
+    public Task<Result<IEnumerable<QuestionResponse>>> GetAvailableAsync(int pollId, string userId,
+        CancellationToken cancellationToken = default);
+
     public Task<Result<QuestionResponse>> Add(int pollId, QuestionRequest questionRequest,
         CancellationToken cancellationToken = default);
 
