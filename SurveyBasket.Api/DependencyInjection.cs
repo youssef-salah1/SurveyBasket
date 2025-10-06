@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using SurveyBasket.Api.Errors;
@@ -8,6 +6,8 @@ using SurveyBasket.Core.Authentication;
 using SurveyBasket.Repository.Persistence;
 using SurveyBasket.Services.Authentication;
 using SurveyBasket.Services.Services;
+using System.Reflection;
+using System.Text;
 
 namespace SurveyBasket.Api;
 
@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IQuestionService, QuestionService>();
         services.AddScoped<IVoteService, VoteService>();
+        services.AddScoped<IResultService, ResultService>();
 
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
