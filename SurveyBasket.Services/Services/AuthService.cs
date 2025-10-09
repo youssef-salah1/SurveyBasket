@@ -1,8 +1,8 @@
-﻿using System.Security.Cryptography;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using SurveyBasket.Core.Abstractions;
 using SurveyBasket.Core.Authentication;
 using SurveyBasket.Core.Contracts.Authentication;
+using System.Security.Cryptography;
 
 namespace SurveyBasket.Services.Services;
 
@@ -70,7 +70,7 @@ public class AuthService(UserManager<ApplicationUser> userManager, IJwtProvider 
 
         user.RefreshTokens.Add(new RefreshTokens
         {
-            Token = refreshToken,
+            Token = newrefreshToken,
             ExpiresOn = refreshTokenExpiry
         });
 
