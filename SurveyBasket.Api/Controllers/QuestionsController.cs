@@ -36,7 +36,7 @@ public class QuestionsController(IQuestionService questionService) : ControllerB
     public async Task<IActionResult> Add([FromRoute] int pollId, [FromBody] QuestionRequest questionRequest,
         CancellationToken cancellationToken)
     {
-        var result = await _questionService.Add(pollId, questionRequest, cancellationToken);
+        var result = await _questionService.AddAsync(pollId, questionRequest, cancellationToken);
 
         return result.IsSuccess
             ? CreatedAtAction(nameof(Get), new { pollId, id = result.Value.Id }, result.Value)
@@ -47,7 +47,7 @@ public class QuestionsController(IQuestionService questionService) : ControllerB
     public async Task<IActionResult> Update([FromRoute] int pollId, [FromRoute] int id,
         [FromBody] QuestionRequest questionRequest, CancellationToken cancellationToken)
     {
-        var result = await _questionService.Update(pollId, id, questionRequest, cancellationToken);
+        var result = await _questionService.UpdateAsync(pollId, id, questionRequest, cancellationToken);
 
         return result.IsSuccess
             ? NoContent()

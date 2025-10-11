@@ -14,10 +14,10 @@ public interface IQuestionService
     public Task<Result<IEnumerable<QuestionResponse>>> GetAvailableAsync(int pollId, string userId,
         CancellationToken cancellationToken = default);
 
-    public Task<Result<QuestionResponse>> Add(int pollId, QuestionRequest questionRequest,
+    public Task<Result<QuestionResponse>> AddAsync(int pollId, QuestionRequest questionRequest,
         CancellationToken cancellationToken = default);
 
-    public Task<Result> Update(int pollId, int questionId, QuestionRequest questionRequest,
+    public Task<Result> UpdateAsync(int pollId, int questionId, QuestionRequest questionRequest,
         CancellationToken cancellationToken = default);
 
     public Task<Result> ToggleStatusAsync(int pollId, int id, CancellationToken cancellationToken = default);

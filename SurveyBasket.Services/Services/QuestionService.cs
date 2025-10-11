@@ -1,14 +1,22 @@
 ﻿using Mapster;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using SurveyBasket.Core.Abstractions;
 using SurveyBasket.Core.Contracts.Answer;
 using SurveyBasket.Core.Contracts.Question;
 
 namespace SurveyBasket.Services.Services;
 
-public class QuestionService(ApplicationDbContext context) : IQuestionService
+public class QuestionService(
+    ApplicationDbContext context,
+    ILogger<QuestionService> logger,
+    HybridCache hybridCache) : IQuestionService
 {
     private readonly ApplicationDbContext _context = context;
+    private readonly ILogger<QuestionService> _logger = logger;
+    private readonly HybridCache _hybridCache = hybridCache;
 
+    private const string _cachePrefix = "availableQuestions";
     public async Task<Result<IEnumerable<QuestionResponse>>> GetAllAsync(int pollId,
         CancellationToken cancellationToken = default)
     {
@@ -16,6 +24,7 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
 
         if (isPollExists is false)
             return Result.Failure<IEnumerable<QuestionResponse>>(PollErrors.PollNotFound);
+
 
         var questions = await _context.Questions
             .Where(p => p.PollId == pollId)
@@ -49,6 +58,8 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
     public async Task<Result<IEnumerable<QuestionResponse>>> GetAvailableAsync(int pollId, string userId,
         CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Cache Questions {Key}", pollId);
+
         var hasVoted = await _context.Votes.AnyAsync(v => v.PollId == pollId && v.UserId == userId, cancellationToken);
 
         if (hasVoted)
@@ -61,22 +72,27 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
         if (!isValid)
             return Result.Failure<IEnumerable<QuestionResponse>>(PollErrors.PollNotFound);
 
-        var questions = await _context.Questions
-            .Where(v => v.PollId == pollId && v.IsActive)
-            .Include(v => v.Answers)
-            .Select(v => new QuestionResponse(
-                v.Id,
-                v.Content,
-                v.Answers.Where(x => x.IsActive).Select(x => new AnswerResponse(x.Id, x.Content)
-                ))
-            )
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        string cacheKey = $"{_cachePrefix}-{pollId}";
 
-        return Result.Success<IEnumerable<QuestionResponse>>(questions);
+        var questions = await _hybridCache.GetOrCreateAsync<IEnumerable<QuestionResponse>>(
+            cacheKey,
+            async cacheEntry => await _context.Questions
+                .Where(v => v.PollId == pollId && v.IsActive)
+                .Include(v => v.Answers)
+                .Select(v => new QuestionResponse(
+                    v.Id,
+                    v.Content,
+                    v.Answers.Where(x => x.IsActive).Select(x => new AnswerResponse(x.Id, x.Content)
+                    ))
+                )
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+        );
+
+        return Result.Success(questions);
     }
 
-    public async Task<Result<QuestionResponse>> Add(int pollId, QuestionRequest questionRequest,
+    public async Task<Result<QuestionResponse>> AddAsync(int pollId, QuestionRequest questionRequest,
         CancellationToken cancellationToken = default)
     {
         var isPollExists = await _context.Polls.AnyAsync(p => p.Id == pollId, cancellationToken);
@@ -97,10 +113,14 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
         await _context.Questions.AddAsync(question, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 
+        string cacheKey = $"{_cachePrefix}-{pollId}";
+        await _hybridCache.RemoveAsync(cacheKey, cancellationToken);
+        _logger.LogInformation("Remove Cache Questions {Key}", pollId);
+
         return Result.Success(question.Adapt<QuestionResponse>());
     }
 
-    public async Task<Result> Update(int pollId, int questionId, QuestionRequest questionRequest,
+    public async Task<Result> UpdateAsync(int pollId, int questionId, QuestionRequest questionRequest,
         CancellationToken cancellationToken = default)
     {
         var isQuestionExists = await _context.Questions
@@ -132,6 +152,10 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
 
         await _context.SaveChangesAsync(cancellationToken);
 
+        string cacheKey = $"{_cachePrefix}-{pollId}";
+        await _hybridCache.RemoveAsync(cacheKey, cancellationToken);
+        _logger.LogInformation("Remove Cache Questions {Key}", pollId);
+
         return Result.Success();
     }
 
@@ -146,6 +170,9 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
         question.IsActive = !question.IsActive;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        string cacheKey = $"{_cachePrefix}-{pollId}";
+        await _hybridCache.RemoveAsync(cacheKey, cancellationToken);
 
         return Result.Success();
     }
