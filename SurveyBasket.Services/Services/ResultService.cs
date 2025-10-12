@@ -7,7 +7,8 @@ public class ResultService(ApplicationDbContext context) : IResultService
 {
     private readonly ApplicationDbContext _context = context;
 
-    public async Task<Result<PollVotesResponse>> GetPollVoteAsync(int pollId, CancellationToken cancellationToken = default)
+    public async Task<Result<PollVotesResponse>> GetPollVoteAsync(int pollId,
+        CancellationToken cancellationToken = default)
     {
         var result = await _context.Polls
             .Where(p => p.Id == pollId)
@@ -16,14 +17,14 @@ public class ResultService(ApplicationDbContext context) : IResultService
                 p.StartsAt,
                 p.EndsAt,
                 p.Votes
-                .Select(v => new VoteResponse(
-                    $"{v.User.FirstName} {v.User.LastName}",
-                    v.SubmittedIn,
-                    v.Answers.Select(a => new QuestionAnswerResponse(
-                        a.Question.Content,
-                        a.Answer.Content
+                    .Select(v => new VoteResponse(
+                        $"{v.User.FirstName} {v.User.LastName}",
+                        v.SubmittedIn,
+                        v.Answers.Select(a => new QuestionAnswerResponse(
+                            a.Question.Content,
+                            a.Answer.Content
+                        ))
                     ))
-                ))
             )).SingleOrDefaultAsync(cancellationToken);
 
         if (result is null)
@@ -32,7 +33,8 @@ public class ResultService(ApplicationDbContext context) : IResultService
         return Result.Success(result);
     }
 
-    public async Task<Result<IEnumerable<VotesPerDayResponse>>> GetVotesPerDayAsync(int pollId, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<VotesPerDayResponse>>> GetVotesPerDayAsync(int pollId,
+        CancellationToken cancellationToken = default)
     {
         bool isExist = await _context.Polls.AnyAsync(p => p.Id == pollId, cancellationToken);
 
@@ -53,7 +55,8 @@ public class ResultService(ApplicationDbContext context) : IResultService
         return Result.Success<IEnumerable<VotesPerDayResponse>>(result);
     }
 
-    public async Task<Result<IEnumerable<VotesPerQuestionResponse>>> GetVotesPerQuestions(int pollId, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<VotesPerQuestionResponse>>> GetVotesPerQuestions(int pollId,
+        CancellationToken cancellationToken = default)
     {
         var isExist = await _context.Polls.AnyAsync(p => p.Id == pollId, cancellationToken);
 
@@ -65,11 +68,11 @@ public class ResultService(ApplicationDbContext context) : IResultService
             .Select(v => new VotesPerQuestionResponse(
                 v.Question.Content,
                 v.Question.VoteAnswers
-                .GroupBy(x => new { AnswerId = x.Answer.Id, Contant = x.Answer.Content })
-                .Select(g => new VotesPerAnswerResponse(
-                    g.Key.Contant,
-                    g.Count()
-                ))
+                    .GroupBy(x => new { AnswerId = x.Answer.Id, Contant = x.Answer.Content })
+                    .Select(g => new VotesPerAnswerResponse(
+                        g.Key.Contant,
+                        g.Count()
+                    ))
             )).ToListAsync(cancellationToken);
 
         return Result.Success<IEnumerable<VotesPerQuestionResponse>>(result);

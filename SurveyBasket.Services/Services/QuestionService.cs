@@ -17,6 +17,7 @@ public class QuestionService(
     private readonly HybridCache _hybridCache = hybridCache;
 
     private const string _cachePrefix = "availableQuestions";
+
     public async Task<Result<IEnumerable<QuestionResponse>>> GetAllAsync(int pollId,
         CancellationToken cancellationToken = default)
     {
