@@ -4,12 +4,14 @@ using SurveyBasket.Core.Authentication;
 using SurveyBasket.Core.Contracts.Authentication;
 using System.Security.Cryptography;
 using System.Text;
+using Hangfire;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using SurveyBasket.Core.Helpers;
+using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 namespace SurveyBasket.Services.Services;
 
@@ -131,9 +133,10 @@ public class AuthService(
         if (isEmailExist)
             return Result.Failure(UserErrors.DuplicatedEmail);
 
-        var username = registerRequest.UserName.Trim().ToLowerInvariant();
+        var username = registerRequest.UserName.Trim().ToUpperInvariant();
 
-        var isUserNameExist = await _userManager.Users.AnyAsync(u => u.NormalizedEmail == username, cancellationToken);
+        var isUserNameExist =
+            await _userManager.Users.AnyAsync(u => u.NormalizedUserName == username, cancellationToken);
 
         if (isUserNameExist)
             return Result.Failure(UserErrors.DuplicatedUserName);
@@ -148,6 +151,7 @@ public class AuthService(
             _logger.LogInformation("User with {UserName} & {Code} Has been created.", user.UserName, code);
 
             await SendConfirmationEmail(user, code);
+            //BackgroundJob.Enqueue(() => SendConfirmationEmail(user, code));
 
             return Result.Success();
         }
@@ -185,6 +189,7 @@ public class AuthService(
 
         return Result.Failure(new Error(error.Code, error.Description, StatusCodes.Status400BadRequest));
     }
+
     public async Task<Result> ResendConfirmationEmailAsync(ResendConfirmationEmailRequest request)
     {
         if (await _userManager.FindByEmailAsync(request.Email) is not { } user)
@@ -198,11 +203,13 @@ public class AuthService(
 
         _logger.LogInformation("Confirmation code: {code}", code);
 
-        await SendConfirmationEmail(user, code);
+        // await SendConfirmationEmail(user, code);
+        BackgroundJob.Enqueue(() => SendConfirmationEmail(user, code));
 
         return Result.Success();
     }
-    private async Task SendConfirmationEmail(ApplicationUser user, string code)
+
+    public async Task SendConfirmationEmail(ApplicationUser user, string code)
     {
         var origin = _httpContextAccessor.HttpContext?.Request.Headers.Origin;
 
@@ -213,8 +220,9 @@ public class AuthService(
                 { "{{action_url}}", $"{origin}/auth/emailConfirmation?userId={user.Id}&code={code}" }
             }
         );
-
-        await _emailSender.SendEmailAsync(user.Email!, "✅ Survey Basket: Email Confirmation", emailBody);
+        // await _emailSender.SendEmailAsync(user.Email!, "✅ Survey Basket: Email Confirmation", emailBody);
+         BackgroundJob.Enqueue(() => _emailSender.SendEmailAsync(user.Email!, "✅ Survey Basket: Email Confirmation", emailBody));
+         await Task.CompletedTask;
     }
 
     private static string GenerateRefreshToken()
