@@ -1,3 +1,4 @@
+using Hangfire;
 using Serilog;
 using SurveyBasket.Api;
 
@@ -21,6 +22,8 @@ if (app.Environment.IsDevelopment())
 app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
+
+app.UseHangfireDashboard("/jops");
 
 app.UseCors();
 

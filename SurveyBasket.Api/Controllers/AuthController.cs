@@ -51,18 +51,18 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
     public async Task<IActionResult> RegisterAsync(RegisterRequest registerRequest, CancellationToken cancellationToken)
     {
         var result = await _authService.RegisterAsync(registerRequest, cancellationToken);
-        
-        return result.IsSuccess 
+
+        return result.IsSuccess
             ? Ok()
             : result.ToProblem();
     }
-    
+
     [HttpPost("confirm-email")]
     public async Task<IActionResult> ConfirmEmailAsync(ConfirmEmailRequest confirmEmailRequest)
     {
         var result = await _authService.ConfirmEmailAsync(confirmEmailRequest);
-        
-        return result.IsSuccess 
+
+        return result.IsSuccess
             ? Ok()
             : result.ToProblem();
     }
@@ -70,10 +70,25 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
     public async Task<IActionResult> ResendConfirmationEmailAsync(ResendConfirmationEmailRequest request)
     {
         var result = await _authService.ResendConfirmationEmailAsync(request);
-        
-        return result.IsSuccess 
+
+        return result.IsSuccess
             ? Ok()
             : result.ToProblem();
     }
-    
+
+    [HttpPost("forget-password")]
+    public async Task<IActionResult> ForgetPassword([FromBody] ForgetPasswordRequest request)
+    {
+        var result = await _authService.SendResetPasswordCodeAsync(request.Email);
+
+        return result.IsSuccess ? Ok() : result.ToProblem();
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        var result = await _authService.ResetPasswordAsync(request);
+
+        return result.IsSuccess ? Ok() : result.ToProblem();
+    }
 }

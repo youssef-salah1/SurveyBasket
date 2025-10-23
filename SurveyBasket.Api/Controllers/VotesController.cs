@@ -1,6 +1,6 @@
-﻿using SurveyBasket.Core.Abstractions;
+﻿using SurveyBasket.Api.Extensions;
+using SurveyBasket.Core.Abstractions;
 using SurveyBasket.Core.Contracts.Vote;
-using SurveyBasket.Extensions;
 
 namespace SurveyBasket.Api.Controllers;
 

@@ -1,12 +1,14 @@
-﻿using Mapster;
+﻿using Hangfire;
+using Mapster;
 using SurveyBasket.Core.Abstractions;
 using SurveyBasket.Core.Contracts.Polls;
 
 namespace SurveyBasket.Services.Services;
 
-public class PollService(ApplicationDbContext context) : IPollService
+public class PollService(ApplicationDbContext context, INotificationService notificationService) : IPollService
 {
     private readonly ApplicationDbContext _context = context;
+    private readonly INotificationService _notificationService = notificationService;
 
     public async Task<IEnumerable<PollResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -91,6 +93,10 @@ public class PollService(ApplicationDbContext context) : IPollService
         poll.IsPublished = !poll.IsPublished;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        if (poll.IsPublished && poll.StartsAt == DateOnly.FromDateTime(DateTime.UtcNow))
+            BackgroundJob.Enqueue(() => _notificationService.SendNewPollsNotification(poll.Id));
+
 
         return Result.Success();
     }

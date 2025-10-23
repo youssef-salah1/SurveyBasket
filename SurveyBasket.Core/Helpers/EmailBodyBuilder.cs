@@ -4,7 +4,7 @@ public static class EmailBodyBuilder
 {
     public static string GenerateEmailBody(string template, Dictionary<string, string> templateModel)
     {
-        var templatePath = "/home/joo/RiderProjects/SurveyBasket/SurveyBasket.Core/Helpers/EmailBodyBuilder.cs";
+        var templatePath = $"C:\\Users\\josal\\source\\repos\\SurveyBasket\\SurveyBasket.Core\\Templates\\{template}.html";
         var streamReader = new StreamReader(templatePath);
         var body = streamReader.ReadToEnd();
         streamReader.Close();

@@ -1,15 +1,16 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Hangfire;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.IdentityModel.Tokens;
 using SurveyBasket.Api.Errors;
 using SurveyBasket.Core.Authentication;
+using SurveyBasket.Core.Settings;
 using SurveyBasket.Repository.Persistence;
 using SurveyBasket.Services.Authentication;
 using SurveyBasket.Services.Services;
 using System.Reflection;
 using System.Text;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using SurveyBasket.Core.Settings;
 
 namespace SurveyBasket.Api;
 
@@ -40,18 +41,23 @@ public static class DependencyInjection
 
         services.AddMapster();
 
+        services.AddProblemDetails();
+
+        services.AddHangfire(configuration);
+
+
         services.AddScoped<IPollService, PollService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IQuestionService, QuestionService>();
         services.AddScoped<IVoteService, VoteService>();
         services.AddScoped<IResultService, ResultService>();
         services.AddScoped<IEmailSender, EmailService>();
-        
+        services.AddScoped<INotificationService, NotificationService>();
+
         services.AddExceptionHandler<GlobalExceptionHandler>();
-        services.AddProblemDetails();
 
         services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
-        
+
         return services;
     }
 
@@ -91,6 +97,7 @@ public static class DependencyInjection
         services.AddSingleton<IMapper>(new Mapper(mappingConfiguration));
         return services;
     }
+
 
     private static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration)
     {
@@ -134,6 +141,19 @@ public static class DependencyInjection
             // options.SignIn.RequireConfirmedEmail = false;
             options.User.RequireUniqueEmail = true;
         });
+
+        return services;
+    }
+
+    private static IServiceCollection AddHangfire(this IServiceCollection services, IConfiguration Configuration)
+    {
+        services.AddHangfire(configuration => configuration
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSqlServerStorage(Configuration.GetConnectionString("HangfireConnection")));
+
+        services.AddHangfireServer();
 
         return services;
     }
