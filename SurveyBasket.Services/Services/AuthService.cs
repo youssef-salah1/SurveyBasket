@@ -132,9 +132,10 @@ public class AuthService(
         if (isEmailExist)
             return Result.Failure(UserErrors.DuplicatedEmail);
 
-        var username = registerRequest.UserName.Trim().ToLowerInvariant();
+        var username = registerRequest.UserName.Trim().ToUpperInvariant();
 
-        var isUserNameExist = await _userManager.Users.AnyAsync(u => u.NormalizedEmail == username, cancellationToken);
+        var isUserNameExist =
+            await _userManager.Users.AnyAsync(u => u.NormalizedUserName == username, cancellationToken);
 
         if (isUserNameExist)
             return Result.Failure(UserErrors.DuplicatedUserName);
@@ -149,6 +150,7 @@ public class AuthService(
             _logger.LogInformation("User with {UserName} & {Code} Has been created.", user.UserName, code);
 
             await SendConfirmationEmail(user, code);
+            //BackgroundJob.Enqueue(() => SendConfirmationEmail(user, code));
 
             return Result.Success();
         }
@@ -186,6 +188,7 @@ public class AuthService(
 
         return Result.Failure(new Error(error.Code, error.Description, StatusCodes.Status400BadRequest));
     }
+
     public async Task<Result> ResendConfirmationEmailAsync(ResendConfirmationEmailRequest request)
     {
         if (await _userManager.FindByEmailAsync(request.Email) is not { } user)
@@ -199,7 +202,8 @@ public class AuthService(
 
         _logger.LogInformation("Confirmation code: {code}", code);
 
-        await SendConfirmationEmail(user, code);
+        // await SendConfirmationEmail(user, code);
+        BackgroundJob.Enqueue(() => SendConfirmationEmail(user, code));
 
         return Result.Success();
     }
@@ -222,35 +226,6 @@ public class AuthService(
         return Result.Success();
 
     }
-
-    public async Task<Result> ResetPasswordAsync(ResetPasswordRequest request)
-    {
-        var user = await _userManager.FindByEmailAsync(request.Email);
-
-        if (user is null || !user.EmailConfirmed)
-            return Result.Failure(UserErrors.InvalidCode);
-
-        IdentityResult result;
-
-        try
-        {
-            var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Code));
-            result = await _userManager.ResetPasswordAsync(user, code, request.NewPassword);
-        }
-        catch (FormatException)
-        {
-            result = IdentityResult.Failed(_userManager.ErrorDescriber.InvalidToken());
-        }
-
-        if (result.Succeeded)
-            return Result.Success();
-
-        var error = result.Errors.First();
-
-        return Result.Failure(new Error(error.Code, error.Description, StatusCodes.Status401Unauthorized));
-
-    }
-
     private async Task SendConfirmationEmail(ApplicationUser user, string code)
     {
         var origin = _httpContextAccessor.HttpContext?.Request.Headers.Origin;
@@ -262,8 +237,9 @@ public class AuthService(
                 { "{{action_url}}", $"{origin}/auth/emailConfirmation?userId={user.Id}&code={code}" }
             }
         );
-
-        await _emailSender.SendEmailAsync(user.Email!, "✅ Survey Basket: Email Confirmation", emailBody);
+        // await _emailSender.SendEmailAsync(user.Email!, "✅ Survey Basket: Email Confirmation", emailBody);
+         BackgroundJob.Enqueue(() => _emailSender.SendEmailAsync(user.Email!, "✅ Survey Basket: Email Confirmation", emailBody));
+         await Task.CompletedTask;
     }
 
     private async Task SendResetPasswordEmail(ApplicationUser user, string code)

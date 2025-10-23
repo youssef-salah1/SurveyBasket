@@ -28,7 +28,8 @@ public static class DependencyInjection
                 builder
                     .AllowAnyMethod()
                     .AllowAnyHeader()
-                    .WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>()!)
+                    .AllowAnyOrigin()
+                    // .WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>()!)
             ));
 
         services.AddAuth(configuration);
@@ -101,47 +102,60 @@ public static class DependencyInjection
 
     private static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<IJwtProvider, JwtProvider>();
-
-        //services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
-        services.AddOptions<JwtOptions>()
-            .BindConfiguration("Jwt")
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
         services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+
+
+        services.AddSingleton<IJwtProvider, JwtProvider>();
+
+        //services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.AddOptions<JwtOptions>()
+            .BindConfiguration(JwtOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        var jwtSettings = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
 
         services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(options =>
+            .AddJwtBearer(o =>
             {
-                options.SaveToken = true;
-                options.TokenValidationParameters = new TokenValidationParameters
+                o.SaveToken = true;
+                o.TokenValidationParameters = new TokenValidationParameters
                 {
+                    ValidateIssuerSigningKey = true,
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = "SurveyBasket",
-                    ValidAudience = "SurveyBasketClient",
-                    IssuerSigningKey =
-                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes("LBaxSXNdx7SSWCqzE8EJFFHAtSpd5KrU")),
-                    ClockSkew = TimeSpan.Zero
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.Key!)),
+                    ValidIssuer = jwtSettings?.Issuer,
+                    ValidAudience = jwtSettings?.Audience
                 };
             });
 
         services.Configure<IdentityOptions>(options =>
         {
             options.Password.RequiredLength = 8;
-            // options.SignIn.RequireConfirmedEmail = false;
+            //options.SignIn.RequireConfirmedEmail = true;
             options.User.RequireUniqueEmail = true;
         });
-
+        return services;
+    }
+    
+    private static IServiceCollection AddHangfire(this IServiceCollection services, IConfiguration Configuration)
+    {
+        services.AddHangfire(configuration => configuration
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSqlServerStorage(Configuration.GetConnectionString("HangfireConnection")));
+    
+        services.AddHangfireServer();
+    
         return services;
     }
 

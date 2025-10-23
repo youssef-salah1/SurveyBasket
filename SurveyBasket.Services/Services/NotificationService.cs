@@ -5,8 +5,10 @@ using SurveyBasket.Core.Helpers;
 
 namespace SurveyBasket.Services.Services;
 
-public class NotificationService(ApplicationDbContext context, UserManager<ApplicationUser> userManager,
-     IHttpContextAccessor httpContextAccessor,
+public class NotificationService(
+    ApplicationDbContext context,
+    UserManager<ApplicationUser> userManager,
+    IHttpContextAccessor httpContextAccessor,
     IEmailSender emailSender) : INotificationService
 {
     private readonly ApplicationDbContext _context = context;
@@ -20,21 +22,18 @@ public class NotificationService(ApplicationDbContext context, UserManager<Appli
 
         if (pollId.HasValue)
         {
-            var poll = await _context.Polls.SingleOrDefaultAsync(x => x.Id == pollId && x.IsPublished);
-
             polls = [poll!];
         }
         else
         {
             polls = await _context.Polls
-                .Where(x => x.IsPublished && x.StartsAt == DateOnly.FromDateTime(DateTime.UtcNow))
                 .AsNoTracking()
                 .ToListAsync();
         }
 
         //TODO: Select members only
         var users = await _userManager.Users.ToListAsync();
-
+        
         var origin = _httpContextAccessor.HttpContext?.Request.Headers.Origin;
 
         foreach (var poll in polls)
@@ -45,7 +44,6 @@ public class NotificationService(ApplicationDbContext context, UserManager<Appli
                 {
                     { "{{name}}", user.FirstName },
                     { "{{pollTill}}", poll.Title },
-                    { "{{endDate}}", poll.EndsAt.ToString() },
                     { "{{url}}", $"{origin}/polls/start/{poll.Id}" }
                 };
 

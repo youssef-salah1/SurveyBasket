@@ -5,7 +5,8 @@ using SurveyBasket.Core.Contracts.Polls;
 
 namespace SurveyBasket.Services.Services;
 
-public class PollService(ApplicationDbContext context, INotificationService notificationService) : IPollService
+public class PollService(ApplicationDbContext context,
+    INotificationService notificationService) : IPollService
 {
     private readonly ApplicationDbContext _context = context;
     private readonly INotificationService _notificationService = notificationService;
@@ -45,7 +46,7 @@ public class PollService(ApplicationDbContext context, INotificationService noti
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        return newPoll.Entity.Adapt<Result<PollResponse>>();
+        return Result.Success(newPoll.Entity.Adapt<PollResponse>());
     }
 
     public async Task<Result> UpdateAsync(int id, PollRequest poll, CancellationToken cancellationToken = default)
@@ -93,10 +94,6 @@ public class PollService(ApplicationDbContext context, INotificationService noti
         poll.IsPublished = !poll.IsPublished;
 
         await _context.SaveChangesAsync(cancellationToken);
-
-        if (poll.IsPublished && poll.StartsAt == DateOnly.FromDateTime(DateTime.UtcNow))
-            BackgroundJob.Enqueue(() => _notificationService.SendNewPollsNotification(poll.Id));
-
 
         return Result.Success();
     }
