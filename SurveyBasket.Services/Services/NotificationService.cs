@@ -22,6 +22,8 @@ public class NotificationService(
 
         if (pollId.HasValue)
         {
+            var poll = await _context.Polls.SingleOrDefaultAsync(x => x.Id == pollId && x.IsPublished);
+
             polls = [poll!];
         }
         else
@@ -33,7 +35,7 @@ public class NotificationService(
 
         //TODO: Select members only
         var users = await _userManager.Users.ToListAsync();
-        
+
         var origin = _httpContextAccessor.HttpContext?.Request.Headers.Origin;
 
         foreach (var poll in polls)

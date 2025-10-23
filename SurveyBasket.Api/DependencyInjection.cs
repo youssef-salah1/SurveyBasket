@@ -29,7 +29,7 @@ public static class DependencyInjection
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowAnyOrigin()
-                    // .WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>()!)
+            // .WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>()!)
             ));
 
         services.AddAuth(configuration);
@@ -143,19 +143,6 @@ public static class DependencyInjection
             //options.SignIn.RequireConfirmedEmail = true;
             options.User.RequireUniqueEmail = true;
         });
-        return services;
-    }
-    
-    private static IServiceCollection AddHangfire(this IServiceCollection services, IConfiguration Configuration)
-    {
-        services.AddHangfire(configuration => configuration
-            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-            .UseSimpleAssemblyNameTypeSerializer()
-            .UseRecommendedSerializerSettings()
-            .UseSqlServerStorage(Configuration.GetConnectionString("HangfireConnection")));
-    
-        services.AddHangfireServer();
-    
         return services;
     }
 
