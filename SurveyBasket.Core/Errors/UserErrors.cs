@@ -29,7 +29,7 @@ public static class UserErrors
     public static readonly Error DuplicatedConfirmation = new("User.DuplicateConfirmation",
         "This email has already been confirmed. You can now log in to your account.",
         StatusCodes.Status409Conflict);
-    
-    public static readonly Error DuplicatedUserName = new ("User.DuplicateUserName", "his username is already taken. Please choose a different one.",
+
+    public static readonly Error DuplicatedUserName = new("User.DuplicateUserName", "his username is already taken. Please choose a different one.",
         StatusCodes.Status409Conflict);
 }

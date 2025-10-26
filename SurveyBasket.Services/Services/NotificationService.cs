@@ -29,6 +29,7 @@ public class NotificationService(
         else
         {
             polls = await _context.Polls
+                .Where(x => x.IsPublished && x.StartsAt == DateOnly.FromDateTime(DateTime.UtcNow))
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -46,6 +47,7 @@ public class NotificationService(
                 {
                     { "{{name}}", user.FirstName },
                     { "{{pollTill}}", poll.Title },
+                    { "{{endDate}}", poll.EndsAt.ToString("ddd d MMM") },
                     { "{{url}}", $"{origin}/polls/start/{poll.Id}" }
                 };
 

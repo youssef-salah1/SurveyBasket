@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.IdentityModel.Tokens;
 using SurveyBasket.Api.Errors;
 using SurveyBasket.Core.Authentication;
+using SurveyBasket.Core.Authentication.Filters;
 using SurveyBasket.Core.Settings;
 using SurveyBasket.Repository.Persistence;
 using SurveyBasket.Services.Authentication;
@@ -28,8 +29,8 @@ public static class DependencyInjection
                 builder
                     .AllowAnyMethod()
                     .AllowAnyHeader()
-                    .AllowAnyOrigin()
-            // .WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>()!)
+                    //.AllowAnyOrigin()
+                    .WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>()!)
             ));
 
         services.AddAuth(configuration);
@@ -102,10 +103,12 @@ public static class DependencyInjection
 
     private static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddIdentity<ApplicationUser, IdentityRole>()
+        services.AddIdentity<ApplicationUser, ApplicationRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
+        services.AddTransient<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddTransient<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
 
         services.AddSingleton<IJwtProvider, JwtProvider>();
 

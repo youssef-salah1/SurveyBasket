@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using SurveyBasket.Core.Abstractions;
+using SurveyBasket.Core.Abstractions.Consts;
 using SurveyBasket.Core.Authentication;
 using SurveyBasket.Core.Contracts.Authentication;
 using SurveyBasket.Core.Helpers;
@@ -15,7 +16,9 @@ using System.Text;
 namespace SurveyBasket.Services.Services;
 
 public class AuthService(
+    ApplicationDbContext context,
     UserManager<ApplicationUser> userManager,
+    SignInManager<ApplicationUser> signInManager,
     IJwtProvider jwtProvider,
     IEmailSender emailSender,
     IHttpContextAccessor httpContextAccessor,
@@ -26,22 +29,23 @@ public class AuthService(
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<AuthService> _logger = logger;
     private readonly int _refreshTokenExpiryDays = 14;
+    private readonly ApplicationDbContext _context = context;
     private readonly UserManager<ApplicationUser> _userManager = userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
 
     public async Task<Result<AuthResponse>> GetTokenAsync(string email, string password,
         CancellationToken cancellationToken = default)
     {
-        var user = await _userManager.FindByEmailAsync(email);
-
-        if (user is null)
+        if (await _userManager.FindByEmailAsync(email) is not { } user)
             return Result.Failure<AuthResponse>(UserErrors.UserNotFound);
 
-        var isValidPassword = await _userManager.CheckPasswordAsync(user, password);
+        var result = await _signInManager.PasswordSignInAsync(user, password, false, false);
 
-        if (!isValidPassword)
-            return Result.Failure<AuthResponse>(UserErrors.UserNotFound);
+        if (!result.Succeeded)
+            return Result.Failure<AuthResponse>(result.IsNotAllowed ? UserErrors.EmailNotConfirmed : UserErrors.UserNotFound);
 
-        var (token, expires) = _jwtProvider.GenerateToken(user);
+        var (userRoles, userPermissions) = await GetUserRolesAndPermissionsAsync(user, cancellationToken);
+        var (token, expires) = _jwtProvider.GenerateToken(user, userRoles, userPermissions);
         var refreshToken = GenerateRefreshToken();
         var refreshTokenExpiry = DateTime.UtcNow.AddDays(_refreshTokenExpiryDays);
 
@@ -78,7 +82,8 @@ public class AuthService(
         if (userRefreshToken is null)
             return Result.Failure<AuthResponse>(UserErrors.InValidRefreshToken);
 
-        var (newtoken, expires) = _jwtProvider.GenerateToken(user);
+        var (userRoles, userPermissions) = await GetUserRolesAndPermissionsAsync(user, cancellationToken);
+        var (newtoken, expires) = _jwtProvider.GenerateToken(user, userRoles, userPermissions);
         var newrefreshToken = GenerateRefreshToken();
         var refreshTokenExpiry = DateTime.UtcNow.AddDays(_refreshTokenExpiryDays);
 
@@ -182,7 +187,10 @@ public class AuthService(
         var result = await _userManager.ConfirmEmailAsync(user, code);
 
         if (result.Succeeded)
+        {
+            await _userManager.AddToRoleAsync(user, DefaultRoles.Member);
             return Result.Success();
+        }
 
         var error = result.Errors.First();
 
@@ -226,7 +234,34 @@ public class AuthService(
         return Result.Success();
 
     }
-    private async Task SendConfirmationEmail(ApplicationUser user, string code)
+    public async Task<Result> ResetPasswordAsync(ResetPasswordRequest request)
+    {
+        var user = await _userManager.FindByEmailAsync(request.Email);
+
+        if (user is null || !user.EmailConfirmed)
+            return Result.Failure(UserErrors.InvalidCode);
+
+        IdentityResult result;
+
+        try
+        {
+            var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Code));
+            result = await _userManager.ResetPasswordAsync(user, code, request.NewPassword);
+        }
+        catch (FormatException)
+        {
+            result = IdentityResult.Failed(_userManager.ErrorDescriber.InvalidToken());
+        }
+
+        if (result.Succeeded)
+            return Result.Success();
+
+        var error = result.Errors.First();
+
+        return Result.Failure(new Error(error.Code, error.Description, StatusCodes.Status401Unauthorized));
+    }
+
+    public async Task SendConfirmationEmail(ApplicationUser user, string code)
     {
         var origin = _httpContextAccessor.HttpContext?.Request.Headers.Origin;
 
@@ -264,30 +299,19 @@ public class AuthService(
         return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
     }
 
-    public async Task<Result> ResetPasswordAsync(ResetPasswordRequest request)
+    private async Task<(IEnumerable<string> roles, IEnumerable<string> permissions)> GetUserRolesAndPermissionsAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
+        var userRoles = await _userManager.GetRolesAsync(user);
 
-        if (user is null || !user.EmailConfirmed)
-            return Result.Failure(UserErrors.InvalidCode);
+        var userPermissions = await (
+                    from r in _context.Roles
+                    join c in _context.RoleClaims
+                    on r.Id equals c.RoleId
+                    where userRoles.Contains(r.Name!)
+                    select c.ClaimValue
+                ).Distinct()
+                 .ToListAsync(cancellationToken);
 
-        IdentityResult result;
-
-        try
-        {
-            var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Code));
-            result = await _userManager.ResetPasswordAsync(user, code, request.NewPassword);
-        }
-        catch (FormatException)
-        {
-            result = IdentityResult.Failed(_userManager.ErrorDescriber.InvalidToken());
-        }
-
-        if (result.Succeeded)
-            return Result.Success();
-
-        var error = result.Errors.First();
-
-        return Result.Failure(new Error(error.Code, error.Description, StatusCodes.Status401Unauthorized));
+        return (userRoles, userPermissions);
     }
 }

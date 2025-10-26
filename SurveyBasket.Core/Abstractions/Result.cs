@@ -39,10 +39,16 @@ public class Result
     }
 }
 
-public class Result<T>(T value, bool isSuccess, Error? error) : Result(isSuccess, error)
+public class Result<TValue> : Result
 {
-    private readonly T _value = value;
+    private readonly TValue? _value;
 
-    public T Value =>
-        IsSuccess ? _value : throw new InvalidOperationException("Cannot access the value of a failed result.");
+    public Result(TValue? value, bool isSuccess, Error error) : base(isSuccess, error)
+    {
+        _value = value;
+    }
+
+    public TValue Value => IsSuccess
+        ? _value!
+        : throw new InvalidOperationException("Failure results cannot have value");
 }

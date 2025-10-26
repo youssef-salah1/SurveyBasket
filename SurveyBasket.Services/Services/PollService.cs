@@ -1,5 +1,4 @@
-﻿using Hangfire;
-using Mapster;
+﻿using Mapster;
 using SurveyBasket.Core.Abstractions;
 using SurveyBasket.Core.Contracts.Polls;
 
