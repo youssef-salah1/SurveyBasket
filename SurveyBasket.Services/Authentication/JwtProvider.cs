@@ -1,10 +1,10 @@
-﻿using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using SurveyBasket.Core.Authentication;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using SurveyBasket.Core.Authentication;
 
 namespace SurveyBasket.Services.Authentication;
 
@@ -20,7 +20,7 @@ public class JwtProvider(IOptions<JwtOptions> options) : IJwtProvider
             new(JwtRegisteredClaimNames.Email, applicationUser.Email!),
             new(JwtRegisteredClaimNames.GivenName, applicationUser.FirstName),
             new(JwtRegisteredClaimNames.FamilyName, applicationUser.LastName),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),            
             new(nameof(roles), JsonSerializer.Serialize(roles), JsonClaimValueTypes.JsonArray),
             new(nameof(permissions), JsonSerializer.Serialize(permissions), JsonClaimValueTypes.JsonArray)
         ];
@@ -48,13 +48,13 @@ public class JwtProvider(IOptions<JwtOptions> options) : IJwtProvider
         try
         {
             tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                IssuerSigningKey = summetricSecurityKey,
-                ValidateIssuerSigningKey = true,
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ClockSkew = TimeSpan.Zero
-            },
+                {
+                    IssuerSigningKey = summetricSecurityKey,
+                    ValidateIssuerSigningKey = true,
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                },
                 out var validatedToken
             );
             var jwtToken = (JwtSecurityToken)validatedToken;

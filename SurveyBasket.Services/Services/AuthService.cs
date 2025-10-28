@@ -41,11 +41,11 @@ public class AuthService(
 
         var result = await _signInManager.PasswordSignInAsync(user, password, false, false);
 
-        if (!result.Succeeded)
+        if(!result.Succeeded)
             return Result.Failure<AuthResponse>(result.IsNotAllowed ? UserErrors.EmailNotConfirmed : UserErrors.UserNotFound);
 
         var (userRoles, userPermissions) = await GetUserRolesAndPermissionsAsync(user, cancellationToken);
-        var (token, expires) = _jwtProvider.GenerateToken(user, userRoles, userPermissions);
+        var (token, expires) = _jwtProvider.GenerateToken(user , userRoles , userPermissions);
         var refreshToken = GenerateRefreshToken();
         var refreshTokenExpiry = DateTime.UtcNow.AddDays(_refreshTokenExpiryDays);
 
@@ -186,8 +186,7 @@ public class AuthService(
 
         var result = await _userManager.ConfirmEmailAsync(user, code);
 
-        if (result.Succeeded)
-        {
+        if (result.Succeeded){
             await _userManager.AddToRoleAsync(user, DefaultRoles.Member);
             return Result.Success();
         }
@@ -299,7 +298,7 @@ public class AuthService(
         return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
     }
 
-    private async Task<(IEnumerable<string> roles, IEnumerable<string> permissions)> GetUserRolesAndPermissionsAsync(ApplicationUser user, CancellationToken cancellationToken)
+    private async Task<(IEnumerable<string> roles, IEnumerable<string> permissions)> GetUserRolesAndPermissionsAsync(ApplicationUser user , CancellationToken cancellationToken)
     {
         var userRoles = await _userManager.GetRolesAsync(user);
 
