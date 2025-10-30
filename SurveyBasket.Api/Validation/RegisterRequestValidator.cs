@@ -13,9 +13,12 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
             .Matches(RegexPatterns.UserName)
             .WithMessage("Username can only contain letters, digits, and these characters: - . _ @ +");
 
-        RuleFor(r => r.Email)
-            .NotEmpty()
-            .EmailAddress();
+        RuleFor(x => x.Email)
+       .Cascade(CascadeMode.Stop)
+       .NotEmpty()
+       .EmailAddress()
+       .Must(e => e.Replace(" ", "") == e)
+       .WithMessage("Invalid email address");
 
         RuleFor(r => r.Password)
             .NotEmpty()

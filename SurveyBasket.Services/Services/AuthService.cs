@@ -39,11 +39,21 @@ public class AuthService(
         if (await _userManager.FindByEmailAsync(email) is not { } user)
             return Result.Failure<AuthResponse>(UserErrors.UserNotFound);
 
-        var result = await _signInManager.PasswordSignInAsync(user, password, false, false);
+        if(user.IsDisable)
+            return Result.Failure<AuthResponse>(UserErrors.UserDisabled);
 
-        if(!result.Succeeded)
-            return Result.Failure<AuthResponse>(result.IsNotAllowed ? UserErrors.EmailNotConfirmed : UserErrors.UserNotFound);
+        var result = await _signInManager.PasswordSignInAsync(user, password, false, true);
 
+        if (!result.Succeeded)
+        {
+            var error = result.IsLockedOut
+                ? UserErrors.LockedUser
+                : result.IsNotAllowed
+                ? UserErrors.EmailNotConfirmed 
+                : UserErrors.UserNotFound;
+
+            return Result.Failure<AuthResponse>(error);
+        }
         var (userRoles, userPermissions) = await GetUserRolesAndPermissionsAsync(user, cancellationToken);
         var (token, expires) = _jwtProvider.GenerateToken(user , userRoles , userPermissions);
         var refreshToken = GenerateRefreshToken();
@@ -76,6 +86,12 @@ public class AuthService(
 
         if (user is null)
             return Result.Failure<AuthResponse>(UserErrors.UserNotFound);
+
+        if (user.IsDisable)
+            return Result.Failure<AuthResponse>(UserErrors.UserDisabled);
+
+        if (user.LockoutEnd > DateTime.UtcNow)
+            return Result.Failure<AuthResponse>(UserErrors.LockedUser);
 
         var userRefreshToken = user.RefreshTokens.FirstOrDefault(rt => rt.Token == refreshToken && rt.IsActive);
 

@@ -1,8 +1,4 @@
-﻿using SurveyBasket.Core.Abstractions;
-using SurveyBasket.Core.Abstractions.Consts;
-using SurveyBasket.Core.Authentication.Filters;
-
-namespace SurveyBasket.Api.Controllers;
+﻿namespace SurveyBasket.Api.Controllers;
 
 [Route("api/polls/{pollId}/[controller]")]
 [ApiController]

@@ -47,11 +47,11 @@ public static class DependencyInjection
 
         services.AddHangfire(configuration);
 
-
         services.AddScoped<IPollService, PollService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IQuestionService, QuestionService>();
         services.AddScoped<IVoteService, VoteService>();
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<IResultService, ResultService>();
         services.AddScoped<IRoleSurvice, RoleSurvice>();
         services.AddScoped<IEmailSender, EmailService>();
@@ -144,7 +144,7 @@ public static class DependencyInjection
         services.Configure<IdentityOptions>(options =>
         {
             options.Password.RequiredLength = 8;
-            //options.SignIn.RequireConfirmedEmail = true;
+            options.SignIn.RequireConfirmedEmail = true;
             options.User.RequireUniqueEmail = true;
         });
         return services;

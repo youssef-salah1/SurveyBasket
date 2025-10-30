@@ -8,6 +8,12 @@ public static class UserErrors
     public static readonly Error UserNotFound = new("User.InvalidCredentials", "Invalid email/password",
         StatusCodes.Status401Unauthorized);
 
+    public static readonly Error UserDisabled = new("User.DisabledUser", "User is disabled",
+        StatusCodes.Status401Unauthorized);
+
+    public static readonly Error LockedUser = new("User.LockedUser", "User is Locked",
+        StatusCodes.Status401Unauthorized);
+
     public static readonly Error InvalidJwtToken =
         new("User.InvalidJwtToken", "Invalid Jwt token", StatusCodes.Status401Unauthorized);
 
@@ -25,6 +31,10 @@ public static class UserErrors
     public static readonly Error InvalidCode = new("User.InvalidCode",
         "The confirmation code you entered is invalid or expired. Please try again or request a new code.",
         StatusCodes.Status404NotFound);
+
+    public static readonly Error InvalidRoles = new("User.InvalidRoles",
+        "Invalid Roles",
+        StatusCodes.Status400BadRequest);
 
     public static readonly Error DuplicatedConfirmation = new("User.DuplicateConfirmation",
         "This email has already been confirmed. You can now log in to your account.",

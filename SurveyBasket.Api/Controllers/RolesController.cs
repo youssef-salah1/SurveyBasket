@@ -2,7 +2,6 @@
 using SurveyBasket.Core.Abstractions.Consts;
 using SurveyBasket.Core.Authentication.Filters;
 using SurveyBasket.Core.Contracts.Roles;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace SurveyBasket.Api.Controllers;
 

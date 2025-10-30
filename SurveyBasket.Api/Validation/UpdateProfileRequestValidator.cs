@@ -1,6 +1,6 @@
-﻿using FluentValidation;
+﻿using SurveyBasket.Core.Contracts.Users;
 
-namespace SurveyBasket.Core.Contracts.Users;
+namespace SurveyBasket.Api.Validation;
 
 public class UpdateProfileRequestValidator : AbstractValidator<UpdateProfileRequest>
 {
