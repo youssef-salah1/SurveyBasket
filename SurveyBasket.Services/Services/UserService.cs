@@ -1,15 +1,9 @@
-﻿using Mapster;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using SurveyBasket.Core.Abstractions;
 using SurveyBasket.Core.Abstractions.Consts;
-using SurveyBasket.Core.Contracts.Roles;
+using SurveyBasket.Core.Contracts.Commen;
 using SurveyBasket.Core.Contracts.Users;
-using SurveyBasket.Core.Entities;
 using System.Data;
-using System.Linq;
 
 namespace SurveyBasket.Services.Services;
 
@@ -24,42 +18,47 @@ public class UserService(
     private readonly IRoleSurvice _roleSurvice = roleSurvice;
     private readonly ILogger<UserService> _logger = logger;
 
-    public async Task<IEnumerable<UserResponse>> GetAllAsync(CancellationToken cancellationToken = default)
-    => await (from u in _context.Users
-              join ur in _context.UserRoles
-              on u.Id equals ur.UserId
-              join r in _context.Roles
-              on ur.RoleId equals r.Id into roles
-              where !roles.Any(x => x.Name == DefaultRoles.Member)
-              select new
+    public async Task<PaginatedList<UserResponse>> GetAllAsync(RequestFilter filter, CancellationToken cancellationToken = default)
+    {
+        var query = (from u in _context.Users
+                     join ur in _context.UserRoles
+                     on u.Id equals ur.UserId
+                     join r in _context.Roles
+                     on ur.RoleId equals r.Id into roles
+                     where !roles.Any(x => x.Name == DefaultRoles.Member)
+                     select new
+                     {
+                         u.Id,
+                         u.UserName,
+                         u.Email,
+                         u.FirstName,
+                         u.LastName,
+                         u.IsDisable,
+                         Roles = roles.Select(x => x.Name!).ToList()
+                     })
+              .GroupBy(u => new
               {
                   u.Id,
                   u.UserName,
                   u.Email,
                   u.FirstName,
                   u.LastName,
-                  u.IsDisable,
-                  Roles = roles.Select(x => x.Name!).ToList()
+                  u.IsDisable
               })
-               .GroupBy(u => new
-               {
-                   u.Id,
-                   u.UserName,
-                   u.Email,
-                   u.FirstName,
-                   u.LastName,
-                   u.IsDisable
-               })
-                .Select(u => new UserResponse(
+               .Select(u => new UserResponse(
 
-                   u.Key.Id,
-                   u.Key.UserName,
-                   u.Key.Email,
-                   u.Key.FirstName,
-                   u.Key.LastName,
-                   u.Key.IsDisable,
-                   u.SelectMany(x => x.Roles)
-               )).ToListAsync(cancellationToken);
+                  u.Key.Id,
+                  u.Key.UserName,
+                  u.Key.Email,
+                  u.Key.FirstName,
+                  u.Key.LastName,
+                  u.Key.IsDisable,
+                  u.SelectMany(x => x.Roles)
+              ));
+
+        var users = await PaginatedList<UserResponse>.CreateAsync(query, filter.PageNumber, filter.PageSize, cancellationToken);
+        return users;
+    }
     public async Task<Result<UserResponse>> GetAsync(string id, CancellationToken cancellationToken = default)
     {
         if (await _userManager.FindByIdAsync(id) is not { } user)
@@ -161,7 +160,7 @@ public class UserService(
         if (await _userManager.FindByIdAsync(id) is not { } user)
             return Result.Failure(UserErrors.UserNotFound);
 
-        var result = await _userManager.SetLockoutEndDateAsync(user , null);
+        var result = await _userManager.SetLockoutEndDateAsync(user, null);
 
         if (result.Succeeded)
             return Result.Success();

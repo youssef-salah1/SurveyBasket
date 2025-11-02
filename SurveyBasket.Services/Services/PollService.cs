@@ -1,6 +1,4 @@
-﻿using Hangfire;
-using Mapster;
-using SurveyBasket.Core.Abstractions;
+﻿using SurveyBasket.Core.Contracts.Commen;
 using SurveyBasket.Core.Contracts.Polls;
 
 namespace SurveyBasket.Services.Services;
@@ -11,9 +9,12 @@ public class PollService(ApplicationDbContext context,
     private readonly ApplicationDbContext _context = context;
     private readonly INotificationService _notificationService = notificationService;
 
-    public async Task<IEnumerable<PollResponse>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<PaginatedList<PollResponse>> GetAllAsync(RequestFilter filter, CancellationToken cancellationToken)
     {
-        var polls = await _context.Polls.AsNoTracking().ProjectToType<PollResponse>().ToListAsync(cancellationToken);
+        var source = _context.Polls.AsNoTracking().ProjectToType<PollResponse>();
+
+        var polls = await PaginatedList<PollResponse>.CreateAsync(source, filter.PageNumber, filter.PageSize, cancellationToken);
+
         return polls;
     }
 
@@ -25,14 +26,16 @@ public class PollService(ApplicationDbContext context,
             : Result.Success(poll.Adapt<PollResponse>());
     }
 
-    public async Task<Result<IEnumerable<PollResponse>>> GetCurrentAsync(CancellationToken cancellationToken = default)
+    public async Task<Result<PaginatedList<PollResponse>>> GetCurrentAsync(RequestFilter filter, CancellationToken cancellationToken = default)
     {
-        var result = await _context.Polls
+        var source = _context.Polls
             .Where(p => p.IsPublished && p.StartsAt <= DateOnly.FromDateTime(DateTime.UtcNow)
                                       && p.EndsAt >= DateOnly.FromDateTime(DateTime.UtcNow))
-            .ProjectToType<PollResponse>()
-            .ToListAsync(cancellationToken);
-        return Result.Success<IEnumerable<PollResponse>>(result);
+            .ProjectToType<PollResponse>();
+
+        var polls = await PaginatedList<PollResponse>.CreateAsync(source, filter.PageNumber, filter.PageSize, cancellationToken);
+
+        return Result.Success(polls);
     }
 
     public async Task<Result<PollResponse>> AddAsync(PollRequest poll, CancellationToken cancellationToken)

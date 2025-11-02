@@ -1,11 +1,8 @@
 ﻿using Hangfire;
-using Mapster;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using SurveyBasket.Core.Abstractions;
 using SurveyBasket.Core.Abstractions.Consts;
 using SurveyBasket.Core.Authentication;
 using SurveyBasket.Core.Contracts.Authentication;
@@ -39,7 +36,7 @@ public class AuthService(
         if (await _userManager.FindByEmailAsync(email) is not { } user)
             return Result.Failure<AuthResponse>(UserErrors.UserNotFound);
 
-        if(user.IsDisable)
+        if (user.IsDisable)
             return Result.Failure<AuthResponse>(UserErrors.UserDisabled);
 
         var result = await _signInManager.PasswordSignInAsync(user, password, false, true);
@@ -49,13 +46,13 @@ public class AuthService(
             var error = result.IsLockedOut
                 ? UserErrors.LockedUser
                 : result.IsNotAllowed
-                ? UserErrors.EmailNotConfirmed 
+                ? UserErrors.EmailNotConfirmed
                 : UserErrors.UserNotFound;
 
             return Result.Failure<AuthResponse>(error);
         }
         var (userRoles, userPermissions) = await GetUserRolesAndPermissionsAsync(user, cancellationToken);
-        var (token, expires) = _jwtProvider.GenerateToken(user , userRoles , userPermissions);
+        var (token, expires) = _jwtProvider.GenerateToken(user, userRoles, userPermissions);
         var refreshToken = GenerateRefreshToken();
         var refreshTokenExpiry = DateTime.UtcNow.AddDays(_refreshTokenExpiryDays);
 
@@ -202,7 +199,8 @@ public class AuthService(
 
         var result = await _userManager.ConfirmEmailAsync(user, code);
 
-        if (result.Succeeded){
+        if (result.Succeeded)
+        {
             await _userManager.AddToRoleAsync(user, DefaultRoles.Member);
             return Result.Success();
         }
@@ -314,7 +312,7 @@ public class AuthService(
         return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
     }
 
-    private async Task<(IEnumerable<string> roles, IEnumerable<string> permissions)> GetUserRolesAndPermissionsAsync(ApplicationUser user , CancellationToken cancellationToken)
+    private async Task<(IEnumerable<string> roles, IEnumerable<string> permissions)> GetUserRolesAndPermissionsAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
         var userRoles = await _userManager.GetRolesAsync(user);
 

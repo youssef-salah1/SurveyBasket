@@ -1,11 +1,12 @@
 ﻿using SurveyBasket.Core.Abstractions;
+using SurveyBasket.Core.Contracts.Commen;
 using SurveyBasket.Core.Contracts.Question;
 
 namespace SurveyBasket.Core.Service;
 
 public interface IQuestionService
 {
-    public Task<Result<IEnumerable<QuestionResponse>>> GetAllAsync(int pollId,
+    public Task<Result<PaginatedList<QuestionResponse>>> GetAllAsync(int pollId, RequestFilter requestFilter,
         CancellationToken cancellationToken = default);
 
     public Task<Result<QuestionResponse>> GetAsync(int pollId, int questionId,

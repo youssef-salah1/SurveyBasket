@@ -1,5 +1,4 @@
-﻿using SurveyBasket.Core.Abstractions;
-using SurveyBasket.Core.Contracts.Results;
+﻿using SurveyBasket.Core.Contracts.Results;
 
 namespace SurveyBasket.Services.Services;
 

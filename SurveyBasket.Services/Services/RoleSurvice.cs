@@ -1,7 +1,4 @@
-﻿using Mapster;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using SurveyBasket.Core.Abstractions;
+﻿using Microsoft.AspNetCore.Http;
 using SurveyBasket.Core.Abstractions.Consts;
 using SurveyBasket.Core.Contracts.Roles;
 
@@ -35,14 +32,14 @@ public class RoleSurvice(RoleManager<ApplicationRole> roleManager,
         return Result.Success(response);
     }
 
-    public async Task<Result<RoleDetailsResponse>> AddAsync(RoleRequest request , CancellationToken cancellationToken = default)
+    public async Task<Result<RoleDetailsResponse>> AddAsync(RoleRequest request, CancellationToken cancellationToken = default)
     {
         if (await _roleManager.RoleExistsAsync(request.Name))
             return Result.Failure<RoleDetailsResponse>(RoleErrors.DuplicateRole);
 
         var validPermissions = Permissions.GetAll();
 
-        if(request.permissions.Except(validPermissions).Any())
+        if (request.permissions.Except(validPermissions).Any())
             return Result.Failure<RoleDetailsResponse>(RoleErrors.InvalidPermissions);
 
         var role = new ApplicationRole
@@ -63,7 +60,7 @@ public class RoleSurvice(RoleManager<ApplicationRole> roleManager,
                     ClaimValue = x
                 });
 
-            await _context.AddRangeAsync(claims , cancellationToken);
+            await _context.AddRangeAsync(claims, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
             return Result.Success(new RoleDetailsResponse(role.Id, role.Name, role.IsDeleted, request.permissions));
@@ -74,9 +71,9 @@ public class RoleSurvice(RoleManager<ApplicationRole> roleManager,
         return Result.Failure<RoleDetailsResponse>(new Error(error.Code, error.Description, StatusCodes.Status400BadRequest));
     }
 
-    public async Task<Result> UpdateAsync(string Id , RoleRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateAsync(string Id, RoleRequest request, CancellationToken cancellationToken = default)
     {
-        if (await _context.Roles.AnyAsync(r => r.Id != Id && request.Name == r.Name , cancellationToken))
+        if (await _context.Roles.AnyAsync(r => r.Id != Id && request.Name == r.Name, cancellationToken))
             return Result.Failure(RoleErrors.DuplicateRole);
 
         if (await _roleManager.FindByIdAsync(Id) is not { } role)
@@ -87,7 +84,7 @@ public class RoleSurvice(RoleManager<ApplicationRole> roleManager,
         if (request.permissions.Except(validPermissions).Any())
             return Result.Failure<RoleDetailsResponse>(RoleErrors.InvalidPermissions);
 
-        var result = await _roleManager.SetRoleNameAsync(role , request.Name);
+        var result = await _roleManager.SetRoleNameAsync(role, request.Name);
 
         if (result.Succeeded)
         {

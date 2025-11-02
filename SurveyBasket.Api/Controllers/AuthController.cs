@@ -1,5 +1,4 @@
-﻿using SurveyBasket.Core.Abstractions;
-using SurveyBasket.Core.Contracts.Authentication;
+﻿using SurveyBasket.Core.Contracts.Authentication;
 
 namespace SurveyBasket.Api.Controllers;
 

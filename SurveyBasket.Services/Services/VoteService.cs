@@ -1,6 +1,4 @@
-﻿using Mapster;
-using SurveyBasket.Core.Abstractions;
-using SurveyBasket.Core.Contracts.Vote;
+﻿using SurveyBasket.Core.Contracts.Vote;
 
 namespace SurveyBasket.Services.Services;
 

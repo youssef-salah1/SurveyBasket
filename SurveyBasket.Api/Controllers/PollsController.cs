@@ -1,6 +1,4 @@
-﻿using SurveyBasket.Core.Abstractions;
-using SurveyBasket.Core.Abstractions.Consts;
-using SurveyBasket.Core.Authentication.Filters;
+﻿using SurveyBasket.Core.Contracts.Commen;
 using SurveyBasket.Core.Contracts.Polls;
 
 namespace SurveyBasket.Api.Controllers;
@@ -14,9 +12,9 @@ public class PollsController(IPollService pollService) : ControllerBase
 
     [HttpGet("")]
     [HasPermission(Permissions.GetPolls)]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] RequestFilter filter, CancellationToken cancellationToken)
     {
-        return Ok(await _pollService.GetAllAsync(cancellationToken));
+        return Ok(await _pollService.GetAllAsync(filter, cancellationToken));
     }
 
     [HttpGet("{id}")]
@@ -31,9 +29,9 @@ public class PollsController(IPollService pollService) : ControllerBase
 
     [HttpGet("current")]
     [Authorize(Roles = DefaultRoles.Member)]
-    public async Task<IActionResult> GetCurrent(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetCurrent([FromQuery] RequestFilter filter, CancellationToken cancellationToken)
     {
-        var result = await _pollService.GetCurrentAsync(cancellationToken);
+        var result = await _pollService.GetCurrentAsync(filter, cancellationToken);
         return Ok(result.Value);
     }
 

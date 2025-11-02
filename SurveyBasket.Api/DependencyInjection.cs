@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.IdentityModel.Tokens;
 using SurveyBasket.Api.Errors;
 using SurveyBasket.Core.Authentication;
-using SurveyBasket.Core.Authentication.Filters;
 using SurveyBasket.Core.Settings;
 using SurveyBasket.Repository.Persistence;
 using SurveyBasket.Services.Authentication;

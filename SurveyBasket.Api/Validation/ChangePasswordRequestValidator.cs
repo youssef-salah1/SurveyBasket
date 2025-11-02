@@ -1,5 +1,4 @@
-﻿using SurveyBasket.Core.Abstractions.Consts;
-using SurveyBasket.Core.Contracts.Users;
+﻿using SurveyBasket.Core.Contracts.Users;
 
 namespace SurveyBasket.Api.Validation;
 

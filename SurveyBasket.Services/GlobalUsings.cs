@@ -1,4 +1,7 @@
-﻿global using Microsoft.EntityFrameworkCore;
+﻿global using Mapster;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.EntityFrameworkCore;
+global using SurveyBasket.Core.Abstractions;
 global using SurveyBasket.Core.Entities;
 global using SurveyBasket.Core.Errors;
 global using SurveyBasket.Core.Service;
