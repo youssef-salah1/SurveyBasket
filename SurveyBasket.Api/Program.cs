@@ -1,4 +1,6 @@
 using Hangfire;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 using SurveyBasket.Api;
 var builder = WebApplication.CreateBuilder(args);
@@ -47,5 +49,16 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.UseExceptionHandler();
+
+app.MapHealthChecks("health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+});
+
+app.MapHealthChecks("health-database", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+    Predicate = x => x.Tags.Contains("database")
+});
 
 app.Run();

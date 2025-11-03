@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.IdentityModel.Tokens;
 using SurveyBasket.Api.Errors;
+using SurveyBasket.Api.Health;
 using SurveyBasket.Core.Authentication;
 using SurveyBasket.Core.Settings;
 using SurveyBasket.Repository.Persistence;
@@ -60,6 +61,11 @@ public static class DependencyInjection
 
         services.Configure<MailSettings>(configuration.GetSection(nameof(MailSettings)));
 
+        services.AddHealthChecks()
+            .AddSqlServer(name: "sql-database", connectionString: configuration.GetConnectionString("DefaultConnection")!, tags: ["database"])
+            .AddHangfire(options => { options.MinimumAvailableServers = 1; })
+            .AddCheck<MailProviderHealthCheck>(name:"mail service");
+            
         return services;
     }
 

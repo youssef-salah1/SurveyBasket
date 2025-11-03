@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using SurveyBasket.Core.Settings;
-using SmtpClient = MailKit.Net.Smtp.SmtpClient;
+using MailKit.Net.Smtp;
 
 namespace SurveyBasket.Services.Services;
 
