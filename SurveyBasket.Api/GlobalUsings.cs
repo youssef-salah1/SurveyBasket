@@ -2,8 +2,11 @@
 global using FluentValidation.AspNetCore;
 global using Mapster;
 global using MapsterMapper;
+global using Microsoft.AspNetCore.Authorization;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.EntityFrameworkCore;
+global using SurveyBasket.Core.Abstractions;
+global using SurveyBasket.Core.Abstractions.Consts;
+global using SurveyBasket.Core.Authentication.Filters;
 global using SurveyBasket.Core.Entities;
 global using SurveyBasket.Core.Service;
-global using Microsoft.AspNetCore.Authorization;

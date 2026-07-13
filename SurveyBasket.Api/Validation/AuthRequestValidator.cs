@@ -2,9 +2,9 @@
 
 namespace SurveyBasket.Api.Validation;
 
-public class CreateAuthRequestValidator : AbstractValidator<LoginRequest>
+public class AuthRequestValidator : AbstractValidator<LoginRequest>
 {
-    public CreateAuthRequestValidator()
+    public AuthRequestValidator()
     {
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")

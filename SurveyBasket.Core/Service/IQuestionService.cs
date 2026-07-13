@@ -1,0 +1,25 @@
+﻿using SurveyBasket.Core.Abstractions;
+using SurveyBasket.Core.Contracts.Commen;
+using SurveyBasket.Core.Contracts.Question;
+
+namespace SurveyBasket.Core.Service;
+
+public interface IQuestionService
+{
+    public Task<Result<PaginatedList<QuestionResponse>>> GetAllAsync(int pollId, RequestFilter requestFilter,
+        CancellationToken cancellationToken = default);
+
+    public Task<Result<QuestionResponse>> GetAsync(int pollId, int questionId,
+        CancellationToken cancellationToken = default);
+
+    public Task<Result<IEnumerable<QuestionResponse>>> GetAvailableAsync(int pollId, string userId,
+        CancellationToken cancellationToken = default);
+
+    public Task<Result<QuestionResponse>> AddAsync(int pollId, QuestionRequest questionRequest,
+        CancellationToken cancellationToken = default);
+
+    public Task<Result> UpdateAsync(int pollId, int questionId, QuestionRequest questionRequest,
+        CancellationToken cancellationToken = default);
+
+    public Task<Result> ToggleStatusAsync(int pollId, int id, CancellationToken cancellationToken = default);
+}

@@ -1,24 +1,36 @@
-﻿using System.Reflection;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using SurveyBasket.Core.Entities;
+using System.Reflection;
+using System.Security.Claims;
 
 namespace SurveyBasket.Repository.Persistence;
 
 public class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
     IHttpContextAccessor httpContextAccessor) :
-    IdentityDbContext<ApplicationUser>(options)
+    IdentityDbContext<ApplicationUser, ApplicationRole, string>(options)
 {
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
     public DbSet<Poll> Polls { get; set; }
+    public DbSet<Vote> Votes { get; set; }
+    public DbSet<Answer> Answers { get; set; }
+    public DbSet<Question> Questions { get; set; }
+    public DbSet<VoteAnswer> VoteAnswers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+        var cascadFks = modelBuilder.Model
+            .GetEntityTypes()
+            .SelectMany(e => e.GetForeignKeys())
+            .Where(fk => !fk.IsOwnership && fk.DeleteBehavior == DeleteBehavior.Cascade);
+
+        foreach (var fk in cascadFks)
+            fk.DeleteBehavior = DeleteBehavior.Restrict;
+
+        //modelBuilder.Entity<Answer>().HasQueryFilter(a => a.IsActive);
 
         base.OnModelCreating(modelBuilder);
     }

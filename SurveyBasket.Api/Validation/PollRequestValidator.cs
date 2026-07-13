@@ -2,9 +2,9 @@
 
 namespace SurveyBasket.Api.Validation;
 
-public class CreatePollRequestValidator : AbstractValidator<PollRequest>
+public class PollRequestValidator : AbstractValidator<PollRequest>
 {
-    public CreatePollRequestValidator()
+    public PollRequestValidator()
     {
         RuleFor(p => p.Title)
             .NotEmpty()

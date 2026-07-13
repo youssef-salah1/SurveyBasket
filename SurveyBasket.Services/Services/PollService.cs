@@ -1,18 +1,21 @@
-﻿using Mapster;
-using SurveyBasket.Core.Abstractions;
+﻿using SurveyBasket.Core.Contracts.Commen;
 using SurveyBasket.Core.Contracts.Polls;
-using SurveyBasket.Core.Errors;
 
 namespace SurveyBasket.Services.Services;
 
-public class PollService(ApplicationDbContext context) : IPollService
+public class PollService(ApplicationDbContext context,
+    INotificationService notificationService) : IPollService
 {
     private readonly ApplicationDbContext _context = context;
+    private readonly INotificationService _notificationService = notificationService;
 
-    public async Task<IEnumerable<PollResponse>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<PaginatedList<PollResponse>> GetAllAsync(RequestFilter filter, CancellationToken cancellationToken)
     {
-        var polls = await _context.Polls.AsNoTracking().ToListAsync(cancellationToken);
-        return polls.Adapt<IEnumerable<PollResponse>>();
+        var source = _context.Polls.AsNoTracking().ProjectToType<PollResponse>();
+
+        var polls = await PaginatedList<PollResponse>.CreateAsync(source, filter.PageNumber, filter.PageSize, cancellationToken);
+
+        return polls;
     }
 
     public async Task<Result<PollResponse>> GetAsync(int id, CancellationToken cancellationToken)
@@ -23,20 +26,43 @@ public class PollService(ApplicationDbContext context) : IPollService
             : Result.Success(poll.Adapt<PollResponse>());
     }
 
-    public async Task<PollResponse> AddAsync(PollRequest poll, CancellationToken cancellationToken)
+    public async Task<Result<PaginatedList<PollResponse>>> GetCurrentAsync(RequestFilter filter, CancellationToken cancellationToken = default)
     {
+        var source = _context.Polls
+            .Where(p => p.IsPublished && p.StartsAt <= DateOnly.FromDateTime(DateTime.UtcNow)
+                                      && p.EndsAt >= DateOnly.FromDateTime(DateTime.UtcNow))
+            .ProjectToType<PollResponse>();
+
+        var polls = await PaginatedList<PollResponse>.CreateAsync(source, filter.PageNumber, filter.PageSize, cancellationToken);
+
+        return Result.Success(polls);
+    }
+
+    public async Task<Result<PollResponse>> AddAsync(PollRequest poll, CancellationToken cancellationToken)
+    {
+        var isFound = await _context.Polls.AnyAsync(p => p.Title == poll.Title, cancellationToken);
+
+        if (isFound)
+            return Result.Failure<PollResponse>(PollErrors.PollTitleAlreadyExists);
+
         var newPoll = await _context.AddAsync(poll.Adapt<Poll>(), cancellationToken);
+
         await _context.SaveChangesAsync(cancellationToken);
 
-        return newPoll.Entity.Adapt<PollResponse>();
+        return Result.Success(newPoll.Entity.Adapt<PollResponse>());
     }
 
     public async Task<Result> UpdateAsync(int id, PollRequest poll, CancellationToken cancellationToken = default)
     {
         var updatedPoll = await _context.Polls.FindAsync(id, cancellationToken);
 
-        if (updatedPoll is null || updatedPoll.Id != id)
+        if (updatedPoll is null)
             return Result.Failure(PollErrors.PollNotFound);
+
+        var isFound = await _context.Polls.AnyAsync(p => p.Title == poll.Title && p.Id != id, cancellationToken);
+
+        if (isFound)
+            return Result.Failure<PollResponse>(PollErrors.PollTitleAlreadyExists);
 
         updatedPoll.Title = poll.Title;
         updatedPoll.Summary = poll.Summary;
